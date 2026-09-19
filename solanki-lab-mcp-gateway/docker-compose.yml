@@ -7,7 +7,7 @@ services:
       APP_PORT: 3333
 
   mcp-gateway:
-    image: ghcr.io/weirdlywild/mcp-gateway:0.7.1@sha256:a32ecbf099d9c9f6dc7ed46e1cee152dbee136c2e1ec85b66fe46164e6c75223
+    image: ghcr.io/weirdlywild/mcp-gateway:0.7.1@sha256:0b7ae27720dc0794efbd277a44dfffb9f1807dce2bbbcfca238e8a6b7d0a3b63
     restart: on-failure
     init: true
     environment:
