@@ -1,0 +1,44 @@
+manifestVersion: 1.1
+id: solanki-lab-browserless
+category: developer
+name: Browserless
+version: "2.56.7"
+tagline: Headless Chrome API server for Puppeteer, Playwright & MCP
+description: >-
+  Browserless is a self-hosted headless Chrome service that lets you run Puppeteer,
+  Playwright and MCP browser automation at scale — without running Chrome in your
+  own code.
+
+
+  It exposes a WebSocket endpoint (ws://<your-umbrel>:<port>) that standard,
+  unpatched Puppeteer and Playwright libraries connect to, plus REST-style endpoints
+  for scraping, PDF generation and screenshots.
+
+
+  Open the app to browse the interactive API documentation at /docs and the
+  Debug Viewer for live browser sessions.
+
+
+  🔑 Authentication is handled with a TOKEN. Use it as the token in your Puppeteer
+  or Playwright connection string, e.g.:
+  puppeteer.connect({ browserWSEndpoint: 'ws://<your-umbrel>:<port>?token=<token>' })
+
+
+  ⚠️ Browserless v2 serves at the root path only — a sub-path (base path) is not
+  supported. This app is exposed through umbrel's app proxy on its own port.
+website: https://browserless.io
+dependencies: []
+repo: https://github.com/browserless/browserless
+support: https://github.com/browserless/browserless/issues
+port: 3000
+gallery:
+  - 1.png
+  - 2.png
+path: ""
+defaultUsername: ""
+defaultPassword: ""
+icon: https://browserless.io/favicon.svg
+releaseNotes: ""
+developer: Browserless
+submitter: Solanki Lab
+submission: https://github.com/solanki-lab/solanki-lab-umbrel-store

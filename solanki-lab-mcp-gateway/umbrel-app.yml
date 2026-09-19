@@ -1,0 +1,50 @@
+manifestVersion: 1.1
+id: solanki-lab-mcp-gateway
+category: developer
+name: MCP Gateway
+version: "0.7.1"
+tagline: Fiberplane MCP Gateway — proxy, observe & manage all your MCP servers
+description: >-
+  Fiberplane MCP Gateway is a self-hosted gateway for Model Context Protocol
+  (MCP) servers. Register your HTTP/SSE and stdio MCP servers once, then point
+  Claude Desktop, Cursor, Copilot, OpenClaw or any MCP client at a single
+  gateway endpoint.
+
+
+  Features:
+
+  - Per-server MCP proxy: /s/<server-name>/mcp
+
+  - Management MCP server: /gateway/mcp (add, remove, list servers via tools)
+
+  - REST API under /api and a web UI at /ui
+
+  - Captures and logs all MCP traffic to a local SQLite database
+
+  - Health monitoring of registered servers every 5 seconds
+
+
+  🔑 The gateway uses a Bearer token for the API, management endpoint and UI.
+  The token is set per-install and can be found in the app's configuration.
+
+
+  ⚠️ The upstream project is distributed as an npm package only — no official
+  Docker image exists. This app bundles a self-built image published to GHCR
+  (ghcr.io/solanki-lab/mcp-gateway:0.7.1), pinned by digest. Upstream is
+  dormant since Dec 2025; version 0.7.1 is the current stable.
+website: https://github.com/fiberplane/mcp-gateway
+dependencies: []
+repo: https://github.com/fiberplane/mcp-gateway
+support: https://github.com/fiberplane/mcp-gateway/issues
+port: 3333
+gallery:
+  - 1.png
+  - 2.png
+path: ""
+defaultUsername: ""
+defaultPassword: ""
+icon: https://framerusercontent.com/images/6fToqJfwTMDbzFca52LUlCj87M0.png
+releaseNotes: ""
+developer: Fiberplane
+submitter: Solanki Lab
+submission: https://github.com/solanki-lab/solanki-lab-umbrel-store

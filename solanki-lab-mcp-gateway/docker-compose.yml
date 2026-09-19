@@ -1,0 +1,19 @@
+version: "3.7"
+
+services:
+  app_proxy:
+    environment:
+      APP_HOST: solanki-lab-mcp-gateway_mcp-gateway_1
+      APP_PORT: 3333
+
+  mcp-gateway:
+    image: ghcr.io/solanki-lab/mcp-gateway:0.7.1@sha256:a32ecbf099d9c9f6dc7ed46e1cee152dbee136c2e1ec85b66fe46164e6c75223
+    restart: on-failure
+    init: true
+    environment:
+      MCP_GATEWAY_PORT: "3333"
+      MCP_GATEWAY_STORAGE: /data
+      MCP_GATEWAY_TOKEN: ${APP_SEED}
+      DEBUG: ""
+    volumes:
+      - ${APP_DATA_DIR}/data:/data
