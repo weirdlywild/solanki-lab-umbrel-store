@@ -44,6 +44,17 @@ path: ""
 defaultUsername: ""
 defaultPassword: ""
 icon: https://cdn.jsdelivr.net/gh/weirdlywild/solanki-lab-umbrel-store/solanki-lab-mcp-gateway/icon.svg
+environment:
+  - name: MCP_GATEWAY_STORAGE
+    services:
+      - mcp-gateway
+    default: /data
+    note: Data directory for the server registry (mcp.json) and captured MCP traffic (SQLite logs).
+  - name: DEBUG
+    services:
+      - mcp-gateway
+    default: ""
+    note: Debug logging for the gateway itself. Set to * for all, or @fiberplane/* for gateway modules only.
 releaseNotes: ""
 developer: Fiberplane
 submitter: Solanki Lab

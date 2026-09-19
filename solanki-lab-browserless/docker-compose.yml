@@ -13,12 +13,16 @@ services:
     shm_size: 2g
     environment:
       TOKEN: ${APP_SEED}
+      HOST: 0.0.0.0
+      PORT: "3000"
       CONCURRENT: "10"
       QUEUED: "10"
       TIMEOUT: "30000"
       CORS: "false"
       ALLOW_GET: "false"
-      HOST: 0.0.0.0
-      PORT: "3000"
+      ALLOW_FILE_PROTOCOL: "false"
+      HEALTH: "false"
+      MAX_CPU_PERCENT: "99"
+      MAX_MEMORY_PERCENT: "99"
       LOG_LEVEL: warn
       TZ: UTC

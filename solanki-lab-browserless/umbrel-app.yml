@@ -38,6 +38,79 @@ path: ""
 defaultUsername: ""
 defaultPassword: ""
 icon: https://cdn.jsdelivr.net/gh/weirdlywild/solanki-lab-umbrel-store/solanki-lab-browserless/icon.svg
+environment:
+  - name: CONCURRENT
+    services:
+      - browserless
+    default: "10"
+    note: Max concurrent browser sessions (default 10).
+  - name: QUEUED
+    services:
+      - browserless
+    default: "10"
+    note: Max queued requests before returning HTTP 429 (default 10).
+  - name: TIMEOUT
+    services:
+      - browserless
+    default: "30000"
+    note: Session timeout in milliseconds (default 30000, -1 for no timeout).
+  - name: CORS
+    services:
+      - browserless
+    default: "false"
+    options:
+      - "false"
+      - "true"
+    note: Enable CORS headers on all routes.
+  - name: ALLOW_GET
+    services:
+      - browserless
+    default: "false"
+    options:
+      - "false"
+      - "true"
+    note: Enable GET requests for the /json, /content and /pdf endpoints.
+  - name: ALLOW_FILE_PROTOCOL
+    services:
+      - browserless
+    default: "false"
+    options:
+      - "false"
+      - "true"
+    note: Allow file:// protocol access inside browser sessions. Security risk — only enable when you trust your token holders.
+  - name: HEALTH
+    services:
+      - browserless
+    default: "false"
+    options:
+      - "false"
+      - "true"
+    note: Pre-request health checks on /pressure. Enable to block requests while the browser is unhealthy.
+  - name: MAX_CPU_PERCENT
+    services:
+      - browserless
+    default: "99"
+    note: Maximum CPU load percentage before requests are blocked (used with HEALTH).
+  - name: MAX_MEMORY_PERCENT
+    services:
+      - browserless
+    default: "99"
+    note: Maximum memory load percentage before requests are blocked (used with HEALTH).
+  - name: LOG_LEVEL
+    services:
+      - browserless
+    default: warn
+    options:
+      - warn
+      - info
+      - debug
+      - trace
+    note: Logging verbosity (trace is most verbose).
+  - name: TZ
+    services:
+      - browserless
+    default: UTC
+    note: IANA time zone, e.g. America/New_York or Europe/London.
 releaseNotes: ""
 developer: Browserless
 submitter: Solanki Lab
