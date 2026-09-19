@@ -2,7 +2,7 @@ manifestVersion: 1.1
 id: solanki-lab-browserless
 category: developer
 name: Browserless
-version: "2.56.7-patch.1"
+version: "2.56.7-patch.2"
 tagline: Headless Chrome API server for Puppeteer, Playwright & MCP
 description: >-
   Browserless is a self-hosted headless Chrome service that lets you run Puppeteer,
@@ -48,8 +48,8 @@ environment:
   - name: CONCURRENT
     services:
       - browserless
-    default: "10"
-    note: Max concurrent browser sessions (default 10).
+    default: "5"
+    note: Max concurrent browser sessions (5 default — tuned for 16 GB home servers).
   - name: QUEUED
     services:
       - browserless
@@ -58,8 +58,8 @@ environment:
   - name: TIMEOUT
     services:
       - browserless
-    default: "30000"
-    note: Session timeout in ms (default 30000, -1 for no timeout).
+    default: "60000"
+    note: Session timeout in ms (60000 default — tuned for agent workloads, -1 for no timeout).
   - name: MAX_RECONNECT_TIME
     services:
       - browserless
@@ -107,20 +107,20 @@ environment:
   - name: HEALTH
     services:
       - browserless
-    default: "false"
+    default: "true"
     options:
       - "false"
       - "true"
-    note: Pre-request health checks on /pressure. Enable to block requests while the browser is unhealthy.
+    note: Pre-request health checks on /pressure. Rejects requests while the browser is unhealthy.
   - name: MAX_CPU_PERCENT
     services:
       - browserless
-    default: "99"
+    default: "85"
     note: Max CPU load % before requests are blocked (used with HEALTH).
   - name: MAX_MEMORY_PERCENT
     services:
       - browserless
-    default: "99"
+    default: "85"
     note: Max memory load % before requests are blocked (used with HEALTH).
   - name: HEARTBEAT_INTERVAL
     services:
@@ -170,9 +170,8 @@ environment:
     default: UTC
     note: IANA time zone, e.g. America/New_York or Europe/London.
 releaseNotes: >-
-  - Fix: browser sessions failed with EACCES permission denied on /data. Removed
-    the persistent data/download mounts (session data uses container temp space,
-    matching the upstream default). Existing installs: update and restart to fix.
+  - Tuned defaults for home servers: CONCURRENT=5, TIMEOUT=60000, HEALTH=true,
+    MAX_CPU_PERCENT=85, MAX_MEMORY_PERCENT=85 (overridable in App Settings).
 developer: Browserless
 submitter: Solanki Lab
 submission: https://github.com/weirdlywild/solanki-lab-umbrel-store

@@ -118,9 +118,9 @@ defaults match the upstream defaults.
 | `TOKEN` | per-install | API token for all client requests. Set for any deployment reachable beyond localhost. |
 | `HOST` | `0.0.0.0` | Bind address. |
 | `PORT` | `3000` | Internal listen port. |
-| `CONCURRENT` | `10` | Max concurrent browser sessions (requests queue beyond this). |
+| `CONCURRENT` | `5` | Max concurrent browser sessions (requests queue beyond this). |
 | `QUEUED` | `10` | Max queued requests before HTTP 429. |
-| `TIMEOUT` | `30000` | Session timeout in ms (`-1` = none). |
+| `TIMEOUT` | `60000` | Session timeout in ms (`-1` = none). |
 | `MAX_RECONNECT_TIME` | unset | Max reconnection timeout (ms) after disconnect; unset = Infinity. |
 | `CORS` | `false` | Enable CORS headers on all routes. |
 | `CORS_ALLOW_ORIGIN` | `*` | Allowed origins when CORS is enabled. |
@@ -128,9 +128,9 @@ defaults match the upstream defaults.
 | `CORS_MAX_AGE` | `2592000` | CORS preflight cache age (s). |
 | `ALLOW_GET` | `false` | Allow GET for `/json`, `/content`, `/pdf`. |
 | `ALLOW_FILE_PROTOCOL` | `false` | Allow `file://` inside sessions (security risk). |
-| `HEALTH` | `false` | Pre-request health checks on `/pressure`. |
-| `MAX_CPU_PERCENT` | `99` | CPU load % cap for health checks. |
-| `MAX_MEMORY_PERCENT` | `99` | Memory load % cap for health checks. |
+| `HEALTH` | `true` | Pre-request health checks on `/pressure`. |
+| `MAX_CPU_PERCENT` | `85` | CPU load % cap for health checks. |
+| `MAX_MEMORY_PERCENT` | `85` | Memory load % cap for health checks. |
 | `HEARTBEAT_INTERVAL` | `30000` | WS heartbeat interval (ms); lower behind load balancers with idle timeouts. |
 | `DISABLE_BLOCKLIST` | `false` | Disable the localhost/private-IP/cloud-metadata URL blocklist. |
 | `OTEL_ENABLED` | `false` | OpenTelemetry instrumentation. |
@@ -143,8 +143,6 @@ defaults match the upstream defaults.
 > `KEY` (enterprise license) is intentionally not exposed — this app uses the
 > OSS image. `DEBUG` (npm debug patterns) is supported upstream but left unset.
 
-Suggested for a 16 GB home server also running other apps: `CONCURRENT: 5`,
-`TIMEOUT: 60000`.
 
 ### MCP Gateway
 
