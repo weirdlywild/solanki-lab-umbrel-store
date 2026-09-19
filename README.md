@@ -54,7 +54,6 @@ All app IDs are prefixed with the store ID `solanki-lab` (required by umbrelOS).
 
 ## Notes
 
-- **Browserless**: set `TOKEN` per-install (umbrel seed). No sub-path support — served at root via app proxy on its own port.
-- **MCP Gateway**: `MCP_GATEWAY_TOKEN` set per-install; UI at `/ui?token=...`, API at `/api`, per-server proxy at `/s/<name>/mcp`.
-- Data persists under `${APP_DATA_DIR}/data`.
-- Apps are packaged per the umbrel community store template (manifestVersion 1.1, app_proxy pattern).
+- **Browserless**: set `TOKEN` per-install (umbrel seed). No sub-path support — served at root via app proxy on its own port. Every environment variable from the official [Docker configuration reference](https://docs.browserless.io/enterprise/docker/config) is exposed: session limits (`CONCURRENT`, `QUEUED`, `TIMEOUT`, `MAX_RECONNECT_TIME`), security (`CORS*`, `ALLOW_GET`, `ALLOW_FILE_PROTOCOL`, `DISABLE_BLOCKLIST`), health (`HEALTH`, `MAX_CPU_PERCENT`, `MAX_MEMORY_PERCENT`, `HEARTBEAT_INTERVAL`), telemetry (`OTEL_ENABLED`), and logging (`LOG_LEVEL`, `LOG_FORMAT`, `TZ`). User data and downloads persist under `${APP_DATA_DIR}/data` and `${APP_DATA_DIR}/downloads`.
+- **MCP Gateway**: `MCP_GATEWAY_TOKEN` set per-install; UI at `/ui?token=...`, API at `/api`, per-server proxy at `/s/<name>/mcp`. All documented env vars are supported: `MCP_GATEWAY_PORT`, `MCP_GATEWAY_STORAGE`, `MCP_GATEWAY_TOKEN`, `DEBUG`. Data persists under `${APP_DATA_DIR}/data`.
+- Apps are packaged per the umbrel community store template (manifestVersion 1.1, app_proxy pattern). The umbrelOS 2.0 `environment:` manifest block exposes the tunables in App Settings.

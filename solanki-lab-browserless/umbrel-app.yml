@@ -53,7 +53,12 @@ environment:
     services:
       - browserless
     default: "30000"
-    note: Session timeout in milliseconds (default 30000, -1 for no timeout).
+    note: Session timeout in ms (default 30000, -1 for no timeout).
+  - name: MAX_RECONNECT_TIME
+    services:
+      - browserless
+    default: ""
+    note: Max reconnection timeout (ms) for sessions after disconnect. Empty = no limit.
   - name: CORS
     services:
       - browserless
@@ -62,6 +67,21 @@ environment:
       - "false"
       - "true"
     note: Enable CORS headers on all routes.
+  - name: CORS_ALLOW_ORIGIN
+    services:
+      - browserless
+    default: "*"
+    note: Allowed CORS origins when CORS is enabled.
+  - name: CORS_ALLOW_METHODS
+    services:
+      - browserless
+    default: ""
+    note: Allowed HTTP methods when CORS is enabled (empty = all).
+  - name: CORS_MAX_AGE
+    services:
+      - browserless
+    default: "2592000"
+    note: CORS preflight cache max age in seconds.
   - name: ALLOW_GET
     services:
       - browserless
@@ -77,7 +97,7 @@ environment:
     options:
       - "false"
       - "true"
-    note: Allow file:// protocol access inside browser sessions. Security risk — only enable when you trust your token holders.
+    note: Allow file:// protocol access inside sessions. Security risk — only enable when you trust your token holders.
   - name: HEALTH
     services:
       - browserless
@@ -90,22 +110,54 @@ environment:
     services:
       - browserless
     default: "99"
-    note: Maximum CPU load percentage before requests are blocked (used with HEALTH).
+    note: Max CPU load % before requests are blocked (used with HEALTH).
   - name: MAX_MEMORY_PERCENT
     services:
       - browserless
     default: "99"
-    note: Maximum memory load percentage before requests are blocked (used with HEALTH).
+    note: Max memory load % before requests are blocked (used with HEALTH).
+  - name: HEARTBEAT_INTERVAL
+    services:
+      - browserless
+    default: "30000"
+    note: WebSocket heartbeat interval in ms. Lower when behind load balancers with aggressive idle timeouts.
+  - name: DISABLE_BLOCKLIST
+    services:
+      - browserless
+    default: "false"
+    options:
+      - "false"
+      - "true"
+    note: Disable the URL blocklist that prevents navigation to localhost, private IPs and cloud metadata endpoints.
+  - name: OTEL_ENABLED
+    services:
+      - browserless
+    default: "false"
+    options:
+      - "false"
+      - "true"
+    note: Enable OpenTelemetry instrumentation.
   - name: LOG_LEVEL
     services:
       - browserless
     default: warn
     options:
-      - warn
-      - info
-      - debug
       - trace
-    note: Logging verbosity (trace is most verbose).
+      - debug
+      - info
+      - warn
+      - error
+      - fatal
+      - silent
+    note: Application log level.
+  - name: LOG_FORMAT
+    services:
+      - browserless
+    default: plain
+    options:
+      - plain
+      - json
+    note: Log output format. json for structured logs for aggregation pipelines.
   - name: TZ
     services:
       - browserless

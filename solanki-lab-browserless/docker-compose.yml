@@ -19,10 +19,21 @@ services:
       QUEUED: "10"
       TIMEOUT: "30000"
       CORS: "false"
+      CORS_ALLOW_ORIGIN: "*"
+      CORS_MAX_AGE: "2592000"
       ALLOW_GET: "false"
       ALLOW_FILE_PROTOCOL: "false"
       HEALTH: "false"
       MAX_CPU_PERCENT: "99"
       MAX_MEMORY_PERCENT: "99"
+      HEARTBEAT_INTERVAL: "30000"
+      DISABLE_BLOCKLIST: "false"
+      OTEL_ENABLED: "false"
+      DATA_DIR: /data
+      DOWNLOAD_DIR: /downloads
       LOG_LEVEL: warn
+      LOG_FORMAT: plain
       TZ: UTC
+    volumes:
+      - ${APP_DATA_DIR}/data:/data
+      - ${APP_DATA_DIR}/downloads:/downloads
