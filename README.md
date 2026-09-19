@@ -42,10 +42,15 @@ All app IDs are prefixed with the store ID `solanki-lab` (required by umbrelOS).
 
 ## Gallery & icons
 
-- Screenshots (`1.png`, `2.png`) are committed per app and referenced relatively (community-store
-  convention). They were captured from the live containers.
-- Icons are hosted URLs (official brand assets): Browserless `https://browserless.io/favicon.svg`,
-  MCP Gateway Fiberplane icon.
+- Screenshots (`1.webp`, `2.webp`, 2160×1350) are committed per app and referenced
+  relatively (official gallery convention). They were captured live from running
+  containers.
+- Icons are 256×256 SVG tiles with dark backgrounds and white brand marks,
+  committed in-app and served via jsdelivr
+  (`https://cdn.jsdelivr.net/gh/weirdlywild/solanki-lab-umbrel-store/<app>/icon.svg`).
+  Committing assets is required for community stores (the jsdelivr icon URL serves
+  from this repo); the official-store linter's `package.review_assets` warning does
+  not apply to community stores.
 
 ## Notes
 

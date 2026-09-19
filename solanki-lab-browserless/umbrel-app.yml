@@ -32,12 +32,12 @@ repo: https://github.com/browserless/browserless
 support: https://github.com/browserless/browserless/issues
 port: 3000
 gallery:
-  - 1.png
-  - 2.png
+  - 1.webp
+  - 2.webp
 path: ""
 defaultUsername: ""
 defaultPassword: ""
-icon: https://browserless.io/favicon.svg
+icon: https://cdn.jsdelivr.net/gh/weirdlywild/solanki-lab-umbrel-store/solanki-lab-browserless/icon.svg
 releaseNotes: ""
 developer: Browserless
 submitter: Solanki Lab
