@@ -2,7 +2,7 @@ manifestVersion: 1.1
 id: solanki-lab-mcp-gateway
 category: developer
 name: MCP Gateway
-version: "0.7.1"
+version: "0.7.1-patch.1"
 tagline: Fiberplane MCP Gateway — proxy, observe & manage all your MCP servers
 description: >-
   Fiberplane MCP Gateway is a self-hosted gateway for Model Context Protocol
@@ -32,6 +32,10 @@ description: >-
   Docker image exists. This app bundles a self-built image published to GHCR
   (ghcr.io/weirdlywild/mcp-gateway:0.7.1), pinned by digest. Upstream is
   dormant since Dec 2025; version 0.7.1 is the current stable.
+
+
+  📦 This build runs the gateway on Node 24 (required to run @browserless.io/mcp and
+  other modern MCP servers as stdio subprocesses inside the gateway).
 website: https://github.com/fiberplane/mcp-gateway
 dependencies: []
 repo: https://github.com/fiberplane/mcp-gateway
@@ -61,7 +65,9 @@ environment:
       - mcp-gateway
     default: ""
     note: Debug logging for the gateway itself. Set to * for all, or @fiberplane/* for gateway modules only.
-releaseNotes: ""
+releaseNotes: >-
+  - Run on Node 24 (required for @browserless.io/mcp and other Node >=24 MCP servers)
+  - Expose MCP_SERVER_INIT_REQ_TIMEOUT_SEC (default 10s; raise to 60 for npx servers)
 developer: Fiberplane
 submitter: Solanki Lab
 submission: https://github.com/weirdlywild/solanki-lab-umbrel-store
