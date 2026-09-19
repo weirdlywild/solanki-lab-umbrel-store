@@ -51,6 +51,11 @@ environment:
       - mcp-gateway
     default: /data
     note: Data directory for the server registry (mcp.json) and captured MCP traffic (SQLite logs).
+  - name: MCP_SERVER_INIT_REQ_TIMEOUT_SEC
+    services:
+      - mcp-gateway
+    default: "10"
+    note: Seconds to wait for a registered MCP server to initialize. Raise to 60 if using npx-based stdio servers that download packages on first start.
   - name: DEBUG
     services:
       - mcp-gateway
