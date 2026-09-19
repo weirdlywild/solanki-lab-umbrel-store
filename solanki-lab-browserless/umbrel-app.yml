@@ -2,7 +2,7 @@ manifestVersion: 1.1
 id: solanki-lab-browserless
 category: developer
 name: Browserless
-version: "2.56.7"
+version: "2.56.7-patch.1"
 tagline: Headless Chrome API server for Puppeteer, Playwright & MCP
 description: >-
   Browserless is a self-hosted headless Chrome service that lets you run Puppeteer,
@@ -26,6 +26,11 @@ description: >-
 
   ⚠️ Browserless v2 serves at the root path only — a sub-path (base path) is not
   supported. This app is exposed through umbrel's app proxy on its own port.
+
+
+  📦 Note: this package does not mount a persistent data directory — Browserless
+  session data (cookies/cache) uses the container's temp space, which is reset
+  when the app restarts. This matches the upstream default.
 website: https://browserless.io
 dependencies: []
 repo: https://github.com/browserless/browserless
@@ -164,7 +169,10 @@ environment:
       - browserless
     default: UTC
     note: IANA time zone, e.g. America/New_York or Europe/London.
-releaseNotes: ""
+releaseNotes: >-
+  - Fix: browser sessions failed with EACCES permission denied on /data. Removed
+    the persistent data/download mounts (session data uses container temp space,
+    matching the upstream default). Existing installs: update and restart to fix.
 developer: Browserless
 submitter: Solanki Lab
 submission: https://github.com/weirdlywild/solanki-lab-umbrel-store

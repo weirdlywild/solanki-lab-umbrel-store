@@ -29,11 +29,6 @@ services:
       HEARTBEAT_INTERVAL: "30000"
       DISABLE_BLOCKLIST: "false"
       OTEL_ENABLED: "false"
-      DATA_DIR: /data
-      DOWNLOAD_DIR: /downloads
       LOG_LEVEL: warn
       LOG_FORMAT: plain
       TZ: UTC
-    volumes:
-      - ${APP_DATA_DIR}/data:/data
-      - ${APP_DATA_DIR}/downloads:/downloads

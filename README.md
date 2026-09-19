@@ -137,8 +137,8 @@ defaults match the upstream defaults.
 | `LOG_LEVEL` | `trace` | `trace`/`debug`/`info`/`warn`/`error`/`fatal`/`silent` (default here: `warn`). |
 | `LOG_FORMAT` | `plain` | `plain` or `json`. |
 | `TZ` | `UTC` | IANA time zone. |
-| `DATA_DIR` | OS temp | User-data dir (cookies/cache); persisted to `${APP_DATA_DIR}/data`. |
-| `DOWNLOAD_DIR` | OS temp | Downloads dir; persisted to `${APP_DATA_DIR}/downloads`. |
+| `DATA_DIR` | OS temp | User-data dir (cookies/cache) — **not mounted** in this package (upstream default; temp space resets on restart). |
+| `DOWNLOAD_DIR` | OS temp | Downloads dir — **not mounted** in this package (upstream default; temp space resets on restart). |
 
 > `KEY` (enterprise license) is intentionally not exposed — this app uses the
 > OSS image. `DEBUG` (npm debug patterns) is supported upstream but left unset.
