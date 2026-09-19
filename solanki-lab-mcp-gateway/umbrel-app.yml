@@ -30,7 +30,7 @@ description: >-
 
   ⚠️ The upstream project is distributed as an npm package only — no official
   Docker image exists. This app bundles a self-built image published to GHCR
-  (ghcr.io/solanki-lab/mcp-gateway:0.7.1), pinned by digest. Upstream is
+  (ghcr.io/weirdlywild/mcp-gateway:0.7.1), pinned by digest. Upstream is
   dormant since Dec 2025; version 0.7.1 is the current stable.
 website: https://github.com/fiberplane/mcp-gateway
 dependencies: []
@@ -47,4 +47,4 @@ icon: https://framerusercontent.com/images/6fToqJfwTMDbzFca52LUlCj87M0.png
 releaseNotes: ""
 developer: Fiberplane
 submitter: Solanki Lab
-submission: https://github.com/solanki-lab/solanki-lab-umbrel-store
+submission: https://github.com/weirdlywild/solanki-lab-umbrel-store

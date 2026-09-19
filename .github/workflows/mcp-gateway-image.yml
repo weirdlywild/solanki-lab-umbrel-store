@@ -7,7 +7,7 @@ on:
       - "solanki-lab-mcp-gateway/Dockerfile"
 
 env:
-  IMAGE: ghcr.io/solanki-lab/mcp-gateway
+  IMAGE: ghcr.io/weirdlywild/mcp-gateway
   VERSION: "0.7.1"
 
 jobs:

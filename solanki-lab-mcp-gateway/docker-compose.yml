@@ -7,7 +7,7 @@ services:
       APP_PORT: 3333
 
   mcp-gateway:
-    image: ghcr.io/solanki-lab/mcp-gateway:0.7.1@sha256:a32ecbf099d9c9f6dc7ed46e1cee152dbee136c2e1ec85b66fe46164e6c75223
+    image: ghcr.io/weirdlywild/mcp-gateway:0.7.1@sha256:a32ecbf099d9c9f6dc7ed46e1cee152dbee136c2e1ec85b66fe46164e6c75223
     restart: on-failure
     init: true
     environment:
