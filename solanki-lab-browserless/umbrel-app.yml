@@ -32,12 +32,12 @@ repo: https://github.com/browserless/browserless
 support: https://github.com/browserless/browserless/issues
 port: 3000
 gallery:
-  - 1.webp
-  - 2.webp
+  - https://cdn.jsdelivr.net/gh/weirdlywild/solanki-lab-umbrel-store@main/solanki-lab-browserless/1.webp
+  - https://cdn.jsdelivr.net/gh/weirdlywild/solanki-lab-umbrel-store@main/solanki-lab-browserless/2.webp
 path: ""
 defaultUsername: ""
 defaultPassword: ""
-icon: https://cdn.jsdelivr.net/gh/weirdlywild/solanki-lab-umbrel-store/solanki-lab-browserless/icon.svg
+icon: https://cdn.jsdelivr.net/gh/weirdlywild/solanki-lab-umbrel-store@main/solanki-lab-browserless/icon.svg
 environment:
   - name: CONCURRENT
     services:

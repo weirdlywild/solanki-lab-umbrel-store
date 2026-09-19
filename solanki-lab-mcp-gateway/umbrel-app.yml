@@ -38,12 +38,12 @@ repo: https://github.com/fiberplane/mcp-gateway
 support: https://github.com/fiberplane/mcp-gateway/issues
 port: 3333
 gallery:
-  - 1.webp
-  - 2.webp
+  - https://cdn.jsdelivr.net/gh/weirdlywild/solanki-lab-umbrel-store@main/solanki-lab-mcp-gateway/1.webp
+  - https://cdn.jsdelivr.net/gh/weirdlywild/solanki-lab-umbrel-store@main/solanki-lab-mcp-gateway/2.webp
 path: ""
 defaultUsername: ""
 defaultPassword: ""
-icon: https://cdn.jsdelivr.net/gh/weirdlywild/solanki-lab-umbrel-store/solanki-lab-mcp-gateway/icon.svg
+icon: https://cdn.jsdelivr.net/gh/weirdlywild/solanki-lab-umbrel-store@main/solanki-lab-mcp-gateway/icon.svg
 environment:
   - name: MCP_GATEWAY_STORAGE
     services:
