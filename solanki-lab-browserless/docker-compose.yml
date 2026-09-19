@@ -12,7 +12,7 @@ services:
     init: true
     shm_size: 2g
     environment:
-      TOKEN: ${APP_SEED}
+      TOKEN: ${APP_PASSWORD}
       HOST: 0.0.0.0
       PORT: "3000"
       CONCURRENT: "10"

@@ -43,6 +43,7 @@ gallery:
 path: ""
 defaultUsername: ""
 defaultPassword: ""
+deterministicPassword: true
 icon: https://cdn.jsdelivr.net/gh/weirdlywild/solanki-lab-umbrel-store@main/solanki-lab-mcp-gateway/icon.svg
 environment:
   - name: MCP_GATEWAY_STORAGE

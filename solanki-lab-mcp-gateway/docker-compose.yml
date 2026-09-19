@@ -13,7 +13,7 @@ services:
     environment:
       MCP_GATEWAY_PORT: "3333"
       MCP_GATEWAY_STORAGE: /data
-      MCP_GATEWAY_TOKEN: ${APP_SEED}
+      MCP_GATEWAY_TOKEN: ${APP_PASSWORD}
       DEBUG: ""
     volumes:
       - ${APP_DATA_DIR}/data:/data

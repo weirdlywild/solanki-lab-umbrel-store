@@ -37,6 +37,7 @@ gallery:
 path: ""
 defaultUsername: ""
 defaultPassword: ""
+deterministicPassword: true
 icon: https://cdn.jsdelivr.net/gh/weirdlywild/solanki-lab-umbrel-store@main/solanki-lab-browserless/icon.svg
 environment:
   - name: CONCURRENT
