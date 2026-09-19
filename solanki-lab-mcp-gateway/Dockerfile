@@ -1,4 +1,4 @@
-FROM node:22-alpine
+FROM node:24-alpine
 
 ENV MCP_GATEWAY_PORT=3333 \
     MCP_GATEWAY_STORAGE=/data \
