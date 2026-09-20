@@ -1,0 +1,71 @@
+manifestVersion: 1.1
+id: solanki-lab-9router-go
+category: developer
+name: 9Router-Go
+version: "0.1.0"
+tagline: Lightweight AI routing gateway (42MB) — route to Qoder, Antigravity, OpenRouter & more
+description: >-
+  9Router-Go is a high-performance Go rewrite of the 9Router /v1 proxy —
+  the same routing engine family as OmniRoute, at ~42 MB RAM instead of
+  multi-GB.
+
+
+  It exposes an OpenAI-compatible endpoint (plus native Claude /v1/messages
+  and Gemini formats) and routes to 95+ providers: openrouter, anthropic,
+  deepseek, groq, nvidia, cerebras, together, fireworks, gemini, antigravity
+  (agy), github copilot, ollama, qoder, kimi, glm, minimax, codex, cursor,
+  trae, windsurf, and more — with combos, fallbacks, sticky routing, RTK
+  token compression and Caveman terse output.
+
+
+  🔑 Auth: use the per-install API key from App Settings as your Bearer token.
+
+  ⚠️ Providers are configured via the shared 9Router dashboard (not bundled)
+  or by inserting connections into the SQLite database. Free/cloud providers
+  like OpenRouter and Antigravity require their own credentials — bring your
+  own keys. Qoder models are available via the qoder provider when the Qoder
+  CLI session is configured.
+website: https://github.com/luqman-v1/9router-go
+dependencies: []
+repo: https://github.com/luqman-v1/9router-go
+support: https://github.com/luqman-v1/9router-go/issues
+port: 20130
+gallery: []
+path: ""
+defaultUsername: ""
+defaultPassword: ""
+icon: https://cdn.jsdelivr.net/gh/weirdlywild/solanki-lab-umbrel-store@main/solanki-lab-9router-go/icon.svg
+environment:
+  - name: PORT
+    services:
+      - router
+    default: "20130"
+    note: HTTP listen port (20130 default).
+  - name: RTK_ENABLED
+    services:
+      - router
+    default: "true"
+    options:
+      - "true"
+      - "false"
+    note: RTK input token compression (on by default).
+  - name: CAVEMAN_ENABLED
+    services:
+      - router
+    default: "false"
+    options:
+      - "true"
+      - "false"
+    note: Caveman terse output style.
+  - name: PONYTAIL_ENABLED
+    services:
+      - router
+    default: "false"
+    options:
+      - "true"
+      - "false"
+    note: Ponytail lazy dev code style.
+releaseNotes: ""
+developer: luqman-v1
+submitter: Solanki Lab
+submission: https://github.com/weirdlywild/solanki-lab-umbrel-store

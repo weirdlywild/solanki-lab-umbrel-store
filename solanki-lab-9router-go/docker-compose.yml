@@ -1,0 +1,21 @@
+version: "3.7"
+
+services:
+  app_proxy:
+    environment:
+      APP_HOST: solanki-lab-9router-go_router_1
+      APP_PORT: 20130
+
+  router:
+    image: ghcr.io/weirdlywild/9router-go:0.1.0@sha256:REPLACE_WITH_MANIFEST_DIGEST
+    restart: on-failure
+    init: true
+    environment:
+      PORT: "20130"
+      DB_PATH: /app/data/data.sqlite
+      DATA_DIR: /app/data
+      RTK_ENABLED: "true"
+      CAVEMAN_ENABLED: "false"
+      PONYTAIL_ENABLED: "false"
+    volumes:
+      - ${APP_DATA_DIR}/data:/app/data
