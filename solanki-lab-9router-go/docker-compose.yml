@@ -7,7 +7,7 @@ services:
       APP_PORT: 20130
 
   router:
-    image: ghcr.io/weirdlywild/9router-go:0.1.0@sha256:REPLACE_WITH_MANIFEST_DIGEST
+    image: ghcr.io/weirdlywild/9router-go:1.8.17@sha256:dbadba0dfc1e0eb6631a8622e4617ccaea0a3cd2ca6a2bf7f5a6cef489388d03
     restart: on-failure
     init: true
     environment:
