@@ -60,9 +60,11 @@ endpoints:
     # 9Router-Go — your self-hosted model routing gateway (port 20130).
     # Set ROUTER_API_KEY (App Settings env var) to match your 9Router-Go key.
     - name: "9Router-Go"
-      apiKey: "${ROUTER_API_KEY:-sk-9router-local}"
+      apiKey: "${ROUTER_API_KEY}"
       baseURL: "http://192.168.1.38:20130/v1"
       models:
+        default:
+          - "openrouter/auto"
         fetch: true
       titleConvo: true
       titleModel: "current_model"
