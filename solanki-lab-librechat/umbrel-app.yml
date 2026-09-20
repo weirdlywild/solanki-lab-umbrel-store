@@ -53,17 +53,22 @@ environment:
     services:
       - api
     default: "sk-9router-local"
-    note: API key for the 9Router-Go custom endpoint (must match your 9Router-Go install's key). Used for the pre-wired endpoint in librechat.yaml.
+    note: API key for the 9Router-Go custom endpoint (must match your 9Router-Go install's key).
+  - name: ROUTER_BASE_URL
+    services:
+      - api
+    default: "http://solanki-lab-9router-go_router_1:20130/v1"
+    note: Base URL for the 9Router-Go custom endpoint (container name on the umbrel network).
+  - name: SEARXNG_URL
+    services:
+      - api
+    default: "http://searxng-web:8080"
+    note: SearXNG instance URL used for agent web search (container name on the umbrel network). Set to your own SearXNG address if you do not use the umbrel app.
   - name: TAVILY_API_KEY
     services:
       - api
     default: ""
     note: Optional Tavily API key to enable web search in agents (see webSearch block in librechat.yaml).
-  - name: MEILI_MASTER_KEY
-    services:
-      - meilisearch
-    default: "librechat-meili-28730984c254c1c98c148c0e9300f040"
-    note: Meilisearch master key (message/conversation search). Changing it requires updating the MEILI_MASTER_KEY in the .env file.
 releaseNotes: >-
   - LibreChat v0.8.8-rc3 (current release line, includes Scheduled Chats)
   - Lean package: api + mongodb + meilisearch (RAG sidecars omitted)

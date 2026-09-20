@@ -2,12 +2,15 @@
 # https://www.librechat.ai/docs/configuration/librechat_yaml
 #
 # Topology: all umbrelOS apps share the docker network `umbrel_main_network`,
-# so services are reached by container name, not LAN IP (host ports bind
-# loopback only). Verified container names on this install:
-#   - SearXNG:            searxng-web:8080
+# so services are reached by container name — no LAN IPs are hardcoded here.
+# Deployment-specific values come from env vars (see umbrel-app.yml), with
+# container-name defaults that work on any umbrel install.
+#
+# Defaults for this install:
+#   - SearXNG:            ${SEARXNG_URL}   (default http://searxng-web:8080)
 #   - MCP Gateway:        solanki-lab-mcp-gateway_mcp-gateway_1:3333
 #   - Browserless:        solanki-lab-browserless_browserless_1:3000
-#   - 9Router-Go:         192.168.1.38:20130 (LAN — exposed host port)
+#   - 9Router-Go:         ${ROUTER_BASE_URL} (default http://solanki-lab-9router-go_router_1:20130/v1)
 
 # Configuration version (required)
 version: 1.2.1
@@ -41,13 +44,13 @@ actions:
     - "librechat.ai"
     - "google.com"
 
-# Web search — SearXNG (self-hosted, already installed on the umbrel)
+# Web search — SearXNG (optional; requires the umbrel SearXNG app)
 # rc3 blocks private endpoints by default; `allowedAddresses` exempts the
 # container hostname. Engines widened past the default (duckduckgo CAPTCHAs
 # most self-hosted instances).
 webSearch:
   searchProvider: "searxng"
-  searxngInstanceUrl: "http://searxng-web:8080"
+  searxngInstanceUrl: "${SEARXNG_URL}"
   searxngApiKey: ""
   searxngSearchOptions:
     engines: "google,bing,startpage"
@@ -80,11 +83,13 @@ endpoints:
     # (optional) Max recursion depth for agents, defaults to 25
     maxRecursionLimit: 100
   custom:
-    # 9Router-Go — your self-hosted model routing gateway (port 20130).
-    # Set ROUTER_API_KEY (App Settings env var) to match your 9Router-Go key.
+    # 9Router-Go — self-hosted model routing gateway.
+    # apiKey + baseURL come from env vars (App Settings):
+    #   ROUTER_API_KEY   — the gateway's Bearer key (default sk-9router-local)
+    #   ROUTER_BASE_URL  — gateway endpoint (default container name on the umbrel network)
     - name: "9Router-Go"
       apiKey: "${ROUTER_API_KEY}"
-      baseURL: "http://192.168.1.38:20130/v1"
+      baseURL: "${ROUTER_BASE_URL}"
       models:
         default:
           - "openrouter/auto"
