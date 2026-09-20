@@ -13,7 +13,26 @@ MAX_TRIES=12
 SLEEP_SECS=5
 
 # ──────────────────────────────────────────────────────────────
-# Skip bootstrap entirely if user already initialised
+# Secrets bootstrap (idempotent): generate per-install secrets and
+# append them to ${APP_DATA_DIR}/.env. The store ships an .env with
+# NO secrets — nothing sensitive is ever committed to the repo.
+# ──────────────────────────────────────────────────────────────
+ENV_FILE="${APP_DATA_DIR}/.env"
+ensure_secret() { # ensure_secret <VAR> <length-hex-characters>
+  local var="$1" len="${2:-64}"
+  if ! grep -qE "^${var}=" "${ENV_FILE}" 2>/dev/null; then
+    echo "${var}=$(openssl rand -hex $((len / 2)))" >> "${ENV_FILE}"
+    echo "Librechat: generated ${var}"
+  fi
+}
+ensure_secret "JWT_SECRET" 64
+ensure_secret "JWT_REFRESH_SECRET" 64
+ensure_secret "CREDS_KEY" 64
+ensure_secret "CREDS_IV" 32        # must be exactly 16 bytes (32 hex chars)
+ensure_secret "MEILI_MASTER_KEY" 64
+
+# ──────────────────────────────────────────────────────────────
+# Skip user bootstrap entirely if user already initialised
 # ──────────────────────────────────────────────────────────────
 if [[ -f "$USER_SENTINEL" ]]; then
   echo "Librechat: user already initialised - skipping bootstrap."
