@@ -1,5 +1,13 @@
-# For more information, see the Configuration Guide:
+# LibreChat configuration (v0.8.8-rc3)
 # https://www.librechat.ai/docs/configuration/librechat_yaml
+#
+# Topology: all umbrelOS apps share the docker network `umbrel_main_network`,
+# so services are reached by container name, not LAN IP (host ports bind
+# loopback only). Verified container names on this install:
+#   - SearXNG:            searxng-web:8080
+#   - MCP Gateway:        solanki-lab-mcp-gateway_mcp-gateway_1:3333
+#   - Browserless:        solanki-lab-browserless_browserless_1:3000
+#   - 9Router-Go:         192.168.1.38:20130 (LAN — exposed host port)
 
 # Configuration version (required)
 version: 1.2.1
@@ -27,36 +35,50 @@ registration:
   # umbrel@umbrel.local; a domain allowlist (e.g. gmail.com) would block it
   # and the app would boot with zero users (registration is disabled via env).
 
-# Actions Object Structure
+# Actions Object Structure — whitelist external API domains for OpenAPI actions
 actions:
   allowedDomains:
     - "librechat.ai"
     - "google.com"
 
-# MCP Servers — connect your Fiberplane MCP Gateway (umbrel app, port 3333)
+# Web search — SearXNG (self-hosted, already installed on the umbrel)
+# rc3 blocks private endpoints by default; `allowedAddresses` exempts the
+# container hostname. Engines widened past the default (duckduckgo CAPTCHAs
+# most self-hosted instances).
+webSearch:
+  searchProvider: "searxng"
+  searxngInstanceUrl: "http://searxng-web:8080"
+  searxngApiKey: ""
+  searxngSearchOptions:
+    engines: "google,bing,startpage"
+    language: "en"
+  scraperProvider: "keenable"
+  rerankerType: "none"
+  allowedAddresses:
+    - "searxng-web:8080"
+
+# MCP Servers — connect your Fiberplane MCP Gateway (umbrel app, port 3333).
 # Uncomment and adjust the server name to match a server registered in the
 # gateway, e.g. browserless or searxng:
 # mcpServers:
 #   gateway-browserless:
 #     type: streamable-http
-#     url: http://192.168.1.38:3333/s/browserless/mcp
-#     headers:
-#       Authorization: "Bearer ${GATEWAY_TOKEN}"
+#     url: http://solanki-lab-mcp-gateway_mcp-gateway_1:3333/s/browserless/mcp
 #   gateway-searxng:
 #     type: streamable-http
-#     url: http://192.168.1.38:3333/s/searxng/mcp
-
-# Web search (optional). Enable by setting TAVILY_API_KEY (or a SearXNG URL):
-# webSearch:
-#   searchProvider:
-#     name: SearXNG
-#     apiKey: "not-needed"
-#     baseUrl: "http://192.168.1.38:8080"
-#   scraping:
-#     provider: Keenable
+#     url: http://solanki-lab-mcp-gateway_mcp-gateway_1:3333/s/searxng/mcp
 
 # Definition of custom endpoints
 endpoints:
+  agents:
+    # (optional) Agent capabilities available to all users
+    capabilities: ["execute_code", "file_search", "actions", "tools"]
+    # (optional) Disable the builder interface for agents
+    disableBuilder: false
+    # (optional) Default recursion depth for agents, defaults to 25
+    recursionLimit: 50
+    # (optional) Max recursion depth for agents, defaults to 25
+    maxRecursionLimit: 100
   custom:
     # 9Router-Go — your self-hosted model routing gateway (port 20130).
     # Set ROUTER_API_KEY (App Settings env var) to match your 9Router-Go key.
