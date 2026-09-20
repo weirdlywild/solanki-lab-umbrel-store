@@ -23,8 +23,9 @@ interface:
 # Registration
 registration:
   socialLogins: ['github', 'google', 'discord', 'openid', 'facebook', 'apple', 'saml']
-  allowedDomains:
-    - "gmail.com"
+  # NOTE: no allowedDomains — the pre-start hook creates the admin user as
+  # umbrel@umbrel.local; a domain allowlist (e.g. gmail.com) would block it
+  # and the app would boot with zero users (registration is disabled via env).
 
 # Actions Object Structure
 actions:
