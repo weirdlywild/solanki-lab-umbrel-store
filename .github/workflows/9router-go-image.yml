@@ -9,7 +9,7 @@ on:
 
 env:
   IMAGE: ghcr.io/weirdlywild/9router-go
-  VERSION: "1.8.17"
+  VERSION: "1.8.18"
 
 jobs:
   build:

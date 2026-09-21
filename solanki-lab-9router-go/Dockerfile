@@ -1,6 +1,6 @@
 FROM golang:1.27-alpine AS builder
 RUN apk add --no-cache git ca-certificates
-ARG VERSION=1.8.17
+ARG VERSION=1.8.18
 RUN git clone --depth 1 --branch v${VERSION} https://github.com/luqman-v1/9router-go.git /app && \
     cd /app && \
     CGO_ENABLED=0 GOOS=linux GOARCH=$(go env GOARCH) go build -ldflags="-s -w -X '9router/proxy/internal/updater.CurrentVersion=${VERSION}'" -o /9router-go ./cmd/9router-go/
