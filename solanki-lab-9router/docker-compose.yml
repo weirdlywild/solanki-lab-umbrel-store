@@ -7,7 +7,7 @@ services:
       APP_PORT: 20128
 
   web:
-    image: decolua/9router:0.5.75@sha256:7c893bc2c27ecea2ae337abd5eacfec9e5763091b3a3b7862fc0625b770bb156
+    image: decolua/9router:0.5.75@sha256:98630946aa8dba08555ef4ffaeb0826479902d14ff7442d721c9793066885e2e
     restart: on-failure
     init: true
     environment:
