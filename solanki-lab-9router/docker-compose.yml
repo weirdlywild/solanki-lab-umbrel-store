@@ -1,0 +1,20 @@
+version: "3.7"
+
+services:
+  app_proxy:
+    environment:
+      APP_HOST: solanki-lab-9router_web_1
+      APP_PORT: 20128
+
+  web:
+    image: decolua/9router:0.5.75@sha256:7c893bc2c27ecea2ae337abd5eacfec9e5763091b3a3b7862fc0625b770bb156
+    restart: on-failure
+    init: true
+    environment:
+      PORT: "20128"
+      HOSTNAME: 0.0.0.0
+      NODE_ENV: production
+      DATA_DIR: /app/data
+      BASE_URL: "http://solanki-lab-9router_web_1:20128"
+    volumes:
+      - ${APP_DATA_DIR}/data:/app/data

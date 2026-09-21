@@ -1,0 +1,54 @@
+manifestVersion: 1.1
+id: solanki-lab-9router
+category: developer
+name: 9Router
+tagline: AI router & token saver — dashboard + OpenAI-compatible proxy (0.5.75)
+version: "0.5.75"
+description: >-
+  9Router is a full AI routing gateway with a built-in management dashboard —
+  the upstream project the lightweight Go engine (solanki-lab-9router-go) is
+  based on.
+
+
+  ✨ Features
+    - 📊 Dashboard UI: connect providers (Antigravity, Qoder, Groq, Kiro,
+      OpenRouter, Claude OAuth and more), manage API keys, combos, usage
+      tracking and quota
+    - 🧠 Combo routing: fallback, round-robin, sticky and fusion strategies
+      across your provider accounts
+    - 💰 RTK token saver: compresses tool_result content (git diff, logs,
+      grep) saving 20-40% tokens
+    - 🔄 OpenAI-compatible endpoint: /v1/chat/completions, /v1/messages,
+      /v1/responses — works with LibreChat, Claude Code, Codex, Cursor, Cline
+    - ⚡ Single SQLite database shared with the Go engine — you can migrate
+      data between the two
+
+
+  🔑 Auth: the dashboard uses an initial password (change it on first login —
+  see the app's credentials in Settings). The /v1 API uses keys you create in
+  the dashboard.
+
+
+  ⚠️ Providers are configured from the dashboard UI — bring your own API keys
+  (OpenRouter, Groq) or connect free tiers (Kiro, Antigravity free quota).
+  This is the FULL app (~1 GB image, ~100 MB RAM) — pick the lightweight Go
+  engine instead if you only need the API and no UI.
+website: https://9router.com
+dependencies: []
+repo: https://github.com/decolua/9router
+support: https://github.com/decolua/9router/issues
+port: 20128
+gallery: []
+path: ""
+defaultUsername: ""
+defaultPassword: ""
+deterministicPassword: true
+icon: https://cdn.jsdelivr.net/gh/weirdlywild/solanki-lab-umbrel-store@main/solanki-lab-9router/icon.svg
+environment: []
+releaseNotes: >-
+  - 9Router v0.5.75 (full dashboard + proxy, port 20128)
+  - Data volume: /home/umbrel/umbrel/app-data/solanki-lab-9router/data
+  - First login: password from App Settings (deterministic per install)
+developer: decolua
+submitter: Solanki Lab
+submission: https://github.com/weirdlywild/solanki-lab-umbrel-store
