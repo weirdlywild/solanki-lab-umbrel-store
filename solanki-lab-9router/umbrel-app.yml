@@ -42,9 +42,14 @@ gallery: []
 path: ""
 defaultUsername: ""
 defaultPassword: ""
-deterministicPassword: true
+deterministicPassword: false
 icon: https://cdn.jsdelivr.net/gh/weirdlywild/solanki-lab-umbrel-store@main/solanki-lab-9router/icon.svg
-environment: []
+environment:
+  - name: INITIAL_PASSWORD
+    services:
+      - web
+    default: "changeme"
+    note: Dashboard password. Change this on first login.
 releaseNotes: >-
   - 9Router v0.5.75 (full dashboard + proxy, port 20128)
   - Data volume: /home/umbrel/umbrel/app-data/solanki-lab-9router/data
