@@ -1,0 +1,19 @@
+version: "3.7"
+
+services:
+  app_proxy:
+    environment:
+      APP_HOST: solanki-lab-browser-use_browser-use_1
+      APP_PORT: 8766
+
+  browser-use:
+    image: ghcr.io/weirdlywild/solanki-lab-browser-use:0.9.4-patch.1
+    restart: on-failure
+    init: true
+    shm_size: 2g
+    environment:
+      ANONYMIZED_TELEMETRY: "false"
+      BROWSER_USE_HEADLESS: "true"
+      # LLM provider key consumed by the browser-use agent for steering.
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}

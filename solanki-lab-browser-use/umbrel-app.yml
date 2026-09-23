@@ -1,0 +1,70 @@
+manifestVersion: 1.1
+id: solanki-lab-browser-use
+category: developer
+name: Browser Use
+version: "0.9.4-patch.1"
+tagline: AI browser automation (re-browser-use) as a self-hosted MCP server
+description: >-
+  Browser Use lets AI agents drive a real browser to click, type, search and
+  extract. This app packages the "re-browser-use" fork — browser-use patched to
+  defeat Cloudflare's verification via NopeCHA — behind an mcp-proxy bridge, so
+  the stdio MCP server is reachable over the network as a streamable HTTP/SSE
+  endpoint.
+
+
+  The MCP server is exposed at http://<your-umbrel>:8766/sse. Point Claude
+  Desktop, Cursor, Copilot or the MCP Gateway at that endpoint to give an agent
+  full browser control.
+
+
+  🔑 This is a self-hosted, open-source replacement for the hosted Browser Use
+  cloud. It needs an LLM API key (OPENAI_API_KEY or ANTHROPIC_API_KEY) that the
+  agent uses to decide what to do in the browser.
+
+
+  ⚠️ A real Chromium browser runs inside this container. Restrict who can reach
+  the MCP endpoint — do not expose it publicly.
+website: https://github.com/browser-use/browser-use
+dependencies: []
+repo: https://github.com/imamousenotacat/re-browser-use
+support: https://github.com/imamousenotacat/re-browser-use/issues
+port: 8766
+path: ""
+defaultUsername: ""
+defaultPassword: ""
+deterministicPassword: true
+icon: https://cdn.jsdelivr.net/gh/weirdlywild/solanki-lab-umbrel-store@main/solanki-lab-browser-use/icon.svg
+environment:
+  - name: OPENAI_API_KEY
+    services:
+      - browser-use
+    default: ""
+    note: OpenAI API key the browser agent uses to decide actions (optional if ANTHROPIC_API_KEY is set).
+  - name: ANTHROPIC_API_KEY
+    services:
+      - browser-use
+    default: ""
+    note: Anthropic API key the browser agent uses to decide actions (optional if OPENAI_API_KEY is set).
+  - name: BROWSER_USE_HEADLESS
+    services:
+      - browser-use
+    default: "true"
+    options:
+      - "true"
+      - "false"
+    note: Run the browser headless (true) or show a window via xvfb (false).
+  - name: ANONYMIZED_TELEMETRY
+    services:
+      - browser-use
+    default: "false"
+    options:
+      - "true"
+      - "false"
+    note: Disable anonymized telemetry.
+releaseNotes: >-
+  - Packages re-browser-use (0.9.4-patch) with Cloudflare/NopeCHA support.
+  - Exposes the stdio MCP server over HTTP/SSE via mcp-proxy on port 8766.
+  - Self-hosted replacement for Browser Use cloud; requires an LLM API key.
+developer: Browser Use
+submitter: Solanki Lab
+submission: https://github.com/weirdlywild/solanki-lab-umbrel-store
