@@ -33,6 +33,9 @@ path: ""
 defaultUsername: ""
 defaultPassword: ""
 deterministicPassword: true
+appProxyAuth:
+  override: true
+  enabled: false
 icon: https://cdn.jsdelivr.net/gh/weirdlywild/solanki-lab-umbrel-store@main/solanki-lab-browser-use/icon.svg
 environment:
   - name: OPENAI_API_KEY

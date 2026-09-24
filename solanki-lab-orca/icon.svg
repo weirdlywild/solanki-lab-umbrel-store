@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <rect width="256" height="256" fill="#101418"/>
+  <g transform="translate(128 128) scale(0.9) translate(-128 -128)">
+    <!-- Orca whale silhouette -->
+    <path fill="#FFFFFF" d="M64 140 Q80 104 112 96 Q128 92 128 80 Q128 96 144 96 Q176 104 192 140 Q200 156 196 168 Q192 156 176 148 Q152 136 128 136 Q104 136 80 148 Q64 156 60 168 Q56 156 64 140 Z"/>
+    <circle cx="100" cy="120" r="6" fill="#101418"/>
+  </g>
+</svg>

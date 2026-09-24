@@ -12,6 +12,7 @@ Community App Store for umbrelOS. Add this repo in **App Store → ⋮ → Commu
 |---|---|---|---|---|
 | [Browser Use](https://github.com/imamousenotacat/re-browser-use) | `solanki-lab-browser-use` | 0.9.4 | `ghcr.io/weirdlywild/solanki-lab-browser-use` (self-built) | AI browser automation MCP server (re-browser-use fork) |
 | [Fiberplane MCP Gateway](https://github.com/fiberplane/mcp-gateway) | `solanki-lab-mcp-gateway` | 0.7.1 | `ghcr.io/weirdlywild/mcp-gateway` (self-built) | MCP proxy, registry & traffic capture |
+| [Orca](https://github.com/stablyai/orca) | `solanki-lab-orca` | 1.4.210 | `ghcr.io/weirdlywild/orca-alwayson` (self-built) | Always-on headless agent runtime (Claude Code + ECC), mobile pairing |
 
 ## Getting started
 
@@ -106,6 +107,23 @@ The per-server proxy is unauthenticated by design (upstream behavior) — rely o
 Tailscale reachability and/or per-server bearer headers. Remote access: replace
 `umbrel.local` with your Tailscale IP (`100.x.x.x`) and enable Tailscale on the
 client machine.
+
+### Orca
+
+Orca is an **always-on headless agent runtime** built from source with the
+mobile-relay patch (PR `stablyai/orca#22435`), so the **Orca mobile app can pair**
+to this always-reachable server. It bundles **Claude Code** + **ECC** and wires
+**9Router** for model routing.
+
+- **Mobile app / web client:** Orca prints a pairing URL/QR at startup. Reach it
+  over Tailscale using `ORCA_PAIRING_ADDRESS` (your Tailscale IP). Port `6768`.
+- **9Router wiring:** `ANTHROPIC_BASE_URL` points at your 9Router
+  (`http://192.168.1.38:20128/v1`), which does Anthropic↔OpenAI↔Gemini format
+  translation for Claude Code.
+
+> ⚠️ This is a full Electron/Chromium runtime (~2GB+ RAM). The pairing data volume
+> persists across restarts. Keep port `6768` Tailscale-only — do not expose it
+> publicly (Orca explicitly warns against public port exposure).
 
 ## Environment variables
 
