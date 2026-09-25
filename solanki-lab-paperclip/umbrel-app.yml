@@ -66,11 +66,38 @@ environment:
       - paperclip
     default: ""
     note: 9Router API key used by the Codex and OpenCode adapters.
+  - name: PAPERCLIP_API_URL
+    services:
+      - paperclip
+    default: "http://127.0.0.1:3100"
+    note: >-
+      Agent-facing control-plane URL. Paperclip injects this into every agent
+      process, so it must be reachable from INSIDE the container. Leave this on
+      loopback unless you run agents on another host. If it is left unset the
+      server derives it from PAPERCLIP_PUBLIC_URL, and a LAN hostname such as
+      solanki does not resolve inside the container - agents then run normally
+      but silently fail to read issues, post comments or create sub-agents.
+  - name: PAPERCLIP_AUTH_DISABLE_SIGN_UP
+    services:
+      - paperclip
+    default: "true"
+    options:
+      - "true"
+      - "false"
+    note: Set to true to block new account registration. Existing accounts keep working.
+  - name: PAPERCLIP_DEPLOYMENT_EXPOSURE
+    services:
+      - paperclip
+    default: "private"
+    options:
+      - "private"
+      - "public"
+    note: Use private for LAN or Tailscale only. Set public only if the instance is internet-facing behind TLS.
   - name: PAPERCLIP_PUBLIC_URL
     services:
       - paperclip
     default: "http://solanki:3100"
-    note: The URL you actually open in your browser. Used for links and callbacks.
+    note: The URL you actually open in your browser. Used for links and callbacks. This is separate from PAPERCLIP_API_URL, which is what agents call.
   - name: PAPERCLIP_ALLOWED_HOSTNAMES
     services:
       - paperclip

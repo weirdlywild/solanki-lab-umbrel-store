@@ -167,6 +167,9 @@ defaults match the upstream defaults.
 
 | Variable | Default | Description |
 |---|---|---|
+| `PAPERCLIP_API_URL` | `http://127.0.0.1:3100` | **Agent-facing** control-plane URL. Must resolve *inside* the container. |
+| `PAPERCLIP_AUTH_DISABLE_SIGN_UP` | `true` | Block new account registration. Existing accounts keep working. |
+| `PAPERCLIP_DEPLOYMENT_EXPOSURE` | `private` | `private` = LAN/Tailscale only. `public` only behind TLS. |
 | `ANTHROPIC_BASE_URL` | `http://192.168.1.38:20128` | 9Router Anthropic-compatible endpoint. No `/v1` — the Anthropic SDK appends the path. |
 | `ANTHROPIC_API_KEY` | unset | 9Router key used by the Claude Code adapter. |
 | `OPENAI_BASE_URL` | `http://192.168.1.38:20128/v1` | 9Router OpenAI-compatible endpoint. Keep `/v1` — the OpenAI SDK appends the path. |
@@ -174,6 +177,15 @@ defaults match the upstream defaults.
 | `PAPERCLIP_PUBLIC_URL` | `http://solanki:3100` | The URL you actually open in the browser. Used for links and callbacks. |
 | `PAPERCLIP_ALLOWED_HOSTNAMES` | `solanki,solanki.tailnet.ts.net,192.168.1.38,100.79.230.24` | Extra hostnames accepted for login, beyond the public URL host. |
 | `PAPERCLIP_TELEMETRY_DISABLED` | `1` | Set to `1` to disable anonymous usage telemetry. |
+
+> ⚠️ **`PAPERCLIP_API_URL` is not the same as `PAPERCLIP_PUBLIC_URL`.** Paperclip
+> injects `PAPERCLIP_API_URL` into every agent process, so it has to resolve from
+> inside the container. If it's left unset, the server derives it from
+> `PAPERCLIP_PUBLIC_URL` — and a LAN hostname like `solanki` does **not** resolve
+> inside the container. The symptom is nasty: agents run fine and return
+> sensible replies, but every attempt to read an issue, post a comment, or
+> create a sub-agent fails, so the agent reports itself blocked and no work
+> actually lands. Keep it on loopback unless the agents run on another host.
 
 > `BETTER_AUTH_SECRET` is **not** exposed here. The container generates a random
 > 32-byte value on first start and persists it at `${APP_DATA_DIR}/data/auth.env`
