@@ -1,0 +1,41 @@
+version: "3.7"
+
+services:
+  app_proxy:
+    environment:
+      APP_HOST: solanki-lab-paperclip_paperclip_1
+      APP_PORT: 3100
+
+  paperclip:
+    image: ghcr.io/paperclipai/paperclip@sha256:a02ac35ac41df911af477422ea0e781cf41d2b2c600c66f0a5ac9d8c63f52c2c
+    restart: unless-stopped
+    pids_limit: 2048
+    shm_size: 2g
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "3100"
+      SERVE_UI: "true"
+      PAPERCLIP_HOME: "/paperclip"
+      PAPERCLIP_DEPLOYMENT_MODE: "authenticated"
+      PAPERCLIP_DEPLOYMENT_EXPOSURE: "private"
+      PAPERCLIP_PUBLIC_URL: ${PAPERCLIP_PUBLIC_URL:-http://solanki:3100}
+      PAPERCLIP_ALLOWED_HOSTNAMES: ${PAPERCLIP_ALLOWED_HOSTNAMES:-solanki,solanki.tailnet.ts.net,192.168.1.38,100.79.230.24}
+      PAPERCLIP_TELEMETRY_DISABLED: ${PAPERCLIP_TELEMETRY_DISABLED:-1}
+      ANTHROPIC_BASE_URL: ${ANTHROPIC_BASE_URL:-http://192.168.1.38:20128}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-http://192.168.1.38:20128/v1}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    command:
+      - sh
+      - -c
+      - |
+        if [ ! -f /paperclip/auth.env ]; then
+          umask 077
+          printf 'BETTER_AUTH_SECRET=%s\n' "$$(head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n')" > /paperclip/auth.env
+        fi
+        set -a
+        . /paperclip/auth.env
+        set +a
+        exec node --import ./server/node_modules/tsx/dist/loader.mjs server/dist/index.js
+    volumes:
+      - ${APP_DATA_DIR}/data:/paperclip

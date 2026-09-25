@@ -1,0 +1,95 @@
+manifestVersion: 1.1
+id: solanki-lab-paperclip
+category: developer
+name: Paperclip
+version: "2026.916.1"
+tagline: Orchestration control plane for teams of AI agents with budgets, goals and governance
+description: >-
+  Paperclip is an open-source control plane for running AI agents as an
+  organisation. Instead of one chat window, you get an org chart: agents hold
+  roles, report to a manager, are assigned goals, and wake on schedules or
+  events to do work. Every task traces back to a company goal.
+
+
+  Out of the box it can drive Claude Code, OpenAI Codex, OpenCode, Gemini, Kimi,
+  Hermes and OpenClaw, plus arbitrary shell commands and HTTP webhooks. It
+  tracks token spend, enforces per-agent budgets with hard stops, persists
+  agent sessions across reboots, and keeps a full audit log of every
+  conversation and tool call.
+
+
+  🔑 Model routing is preconfigured for 9Router. Set ANTHROPIC_API_KEY (and
+  OPENAI_API_KEY if you use the OpenAI-compatible agents) in this app's
+  settings. Adapters are then created in the Paperclip UI and pointed at these
+  endpoints.
+
+
+  Reach the dashboard at http://<your-umbrel>:3100. It is responsive, so the
+  same UI works from a phone on Tailscale. A session-signing secret is generated
+  automatically on first start and stored in the app data directory.
+
+
+  ⚠️ Agents run unattended and the Claude Code adapter defaults to skipping
+  permission prompts. Give Paperclip a dedicated workspace, set budgets, and
+  keep port 3100 on your LAN or Tailscale — do not expose it to the internet.
+website: https://paperclip.ing
+dependencies: []
+repo: https://github.com/paperclipai/paperclip
+support: https://github.com/paperclipai/paperclip/issues
+port: 3100
+path: ""
+defaultUsername: ""
+defaultPassword: ""
+deterministicPassword: true
+appProxyAuth:
+  override: true
+  enabled: false
+icon: https://cdn.jsdelivr.net/gh/weirdlywild/solanki-lab-umbrel-store@main/solanki-lab-paperclip/icon.svg
+environment:
+  - name: ANTHROPIC_BASE_URL
+    services:
+      - paperclip
+    default: "http://192.168.1.38:20128"
+    note: 9Router Anthropic-compatible endpoint. No /v1 suffix - the Anthropic SDK appends the path itself.
+  - name: ANTHROPIC_API_KEY
+    services:
+      - paperclip
+    default: ""
+    note: 9Router API key used by the Claude Code adapter.
+  - name: OPENAI_BASE_URL
+    services:
+      - paperclip
+    default: "http://192.168.1.38:20128/v1"
+    note: 9Router OpenAI-compatible endpoint. Keep the /v1 suffix - the OpenAI SDK appends the path itself.
+  - name: OPENAI_API_KEY
+    services:
+      - paperclip
+    default: ""
+    note: 9Router API key used by the Codex and OpenCode adapters.
+  - name: PAPERCLIP_PUBLIC_URL
+    services:
+      - paperclip
+    default: "http://solanki:3100"
+    note: The URL you actually open in your browser. Used for links and callbacks.
+  - name: PAPERCLIP_ALLOWED_HOSTNAMES
+    services:
+      - paperclip
+    default: "solanki,solanki.tailnet.ts.net,192.168.1.38,100.79.230.24"
+    note: Comma-separated extra hostnames accepted for login, in addition to the public URL host.
+  - name: PAPERCLIP_TELEMETRY_DISABLED
+    services:
+      - paperclip
+    default: "1"
+    options:
+      - "1"
+      - "0"
+    note: Set to 1 to disable anonymous usage telemetry.
+releaseNotes: >-
+  - Pinned upstream image ghcr.io/paperclipai/paperclip version 2026.916.1 (linux/amd64 + arm64)
+  - Single container with embedded PostgreSQL - no separate database service
+  - Pre-wired for 9Router model routing via ANTHROPIC_BASE_URL and OPENAI_BASE_URL
+  - Session-signing secret generated automatically on first start and persisted
+  - Tuned for unattended agent runs: tini is PID 1 in the image, pids_limit and shm_size raised
+developer: Paperclip
+submitter: Solanki Lab
+submission: https://github.com/weirdlywild/solanki-lab-umbrel-store

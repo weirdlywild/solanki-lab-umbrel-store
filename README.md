@@ -12,7 +12,7 @@ Community App Store for umbrelOS. Add this repo in **App Store → ⋮ → Commu
 |---|---|---|---|---|
 | [Browser Use](https://github.com/imamousenotacat/re-browser-use) | `solanki-lab-browser-use` | 0.9.4 | `ghcr.io/weirdlywild/solanki-lab-browser-use` (self-built) | AI browser automation MCP server (re-browser-use fork) |
 | [Fiberplane MCP Gateway](https://github.com/fiberplane/mcp-gateway) | `solanki-lab-mcp-gateway` | 0.7.1 | `ghcr.io/weirdlywild/mcp-gateway` (self-built) | MCP proxy, registry & traffic capture |
-| [Orca](https://github.com/stablyai/orca) | `solanki-lab-orca` | 1.4.210 | `ghcr.io/weirdlywild/orca-alwayson` (self-built) | Always-on headless agent runtime (Claude Code + ECC), mobile pairing |
+| [Paperclip](https://github.com/paperclipai/paperclip) | `solanki-lab-paperclip` | 2026.916.1 | `ghcr.io/paperclipai/paperclip` (upstream, digest-pinned) | Agent orchestration control plane — org chart, goals, budgets, governance |
 
 ## Getting started
 
@@ -108,22 +108,32 @@ Tailscale reachability and/or per-server bearer headers. Remote access: replace
 `umbrel.local` with your Tailscale IP (`100.x.x.x`) and enable Tailscale on the
 client machine.
 
-### Orca
+### Paperclip
 
-Orca is an **always-on headless agent runtime** built from source with the
-mobile-relay patch (PR `stablyai/orca#22435`), so the **Orca mobile app can pair**
-to this always-reachable server. It bundles **Claude Code** + **ECC** and wires
-**9Router** for model routing.
+Paperclip is an **open-source control plane for teams of AI agents**. Rather than
+one chat window, you get an org chart: agents hold roles, report to a manager,
+are assigned goals, and wake on schedules or events to do work. It tracks token
+spend, enforces per-agent budgets with hard stops, persists sessions across
+reboots, and keeps a full audit log.
 
-- **Mobile app / web client:** Orca prints a pairing URL/QR at startup. Reach it
-  over Tailscale using `ORCA_PAIRING_ADDRESS` (your Tailscale IP). Port `6768`.
-- **9Router wiring:** `ANTHROPIC_BASE_URL` points at your 9Router
-  (`http://192.168.1.38:20128/v1`), which does Anthropic↔OpenAI↔Gemini format
-  translation for Claude Code.
+- **Dashboard:** port `3100`. The UI is responsive, so the same page works from
+  a phone over Tailscale. Create the first account through the bootstrap flow on
+  first visit.
+- **Agent runtimes:** the image ships `claude`, `codex`, `opencode`, `gemini` and
+  `kimi` preinstalled, plus adapters for Hermes, OpenClaw, arbitrary shell
+  commands and HTTP webhooks. Create an agent in the UI and pick an adapter.
+- **9Router wiring:** `ANTHROPIC_BASE_URL` / `OPENAI_BASE_URL` already point at
+  your 9Router. Set `ANTHROPIC_API_KEY` (and `OPENAI_API_KEY`) in the app
+  settings to activate model routing.
+- **Database:** embedded PostgreSQL (PGlite) inside the container — no separate
+  database service, no external dependency. Backups are written hourly to the
+  app data directory and kept for 7 days.
 
-> ⚠️ This is a full Electron/Chromium runtime (~2GB+ RAM). The pairing data volume
-> persists across restarts. Keep port `6768` Tailscale-only — do not expose it
-> publicly (Orca explicitly warns against public port exposure).
+> ⚠️ **Agents run unattended.** The Claude Code adapter defaults to skipping
+> permission prompts, so give Paperclip a dedicated workspace directory and set
+> per-agent budgets. Measured idle footprint is ~1 GB RAM, so it is comfortable
+> alongside the rest of this store. Keep port `3100` on your LAN or Tailscale —
+> do not expose it to the internet.
 
 ## Environment variables
 
@@ -153,6 +163,23 @@ defaults match the upstream defaults.
 | `MCP_GATEWAY_TOKEN` | auto-generated | Bearer token for `/api`, `/gateway/mcp`, `/ui` (min 32 chars recommended). |
 | `DEBUG` | unset | Debug logging: `*` for all, `@fiberplane/*` for gateway modules. |
 
+### Paperclip
+
+| Variable | Default | Description |
+|---|---|---|
+| `ANTHROPIC_BASE_URL` | `http://192.168.1.38:20128` | 9Router Anthropic-compatible endpoint. No `/v1` — the Anthropic SDK appends the path. |
+| `ANTHROPIC_API_KEY` | unset | 9Router key used by the Claude Code adapter. |
+| `OPENAI_BASE_URL` | `http://192.168.1.38:20128/v1` | 9Router OpenAI-compatible endpoint. Keep `/v1` — the OpenAI SDK appends the path. |
+| `OPENAI_API_KEY` | unset | 9Router key used by the Codex and OpenCode adapters. |
+| `PAPERCLIP_PUBLIC_URL` | `http://solanki:3100` | The URL you actually open in the browser. Used for links and callbacks. |
+| `PAPERCLIP_ALLOWED_HOSTNAMES` | `solanki,solanki.tailnet.ts.net,192.168.1.38,100.79.230.24` | Extra hostnames accepted for login, beyond the public URL host. |
+| `PAPERCLIP_TELEMETRY_DISABLED` | `1` | Set to `1` to disable anonymous usage telemetry. |
+
+> `BETTER_AUTH_SECRET` is **not** exposed here. The container generates a random
+> 32-byte value on first start and persists it at `${APP_DATA_DIR}/data/auth.env`
+> with mode `600`, so sessions survive restarts and updates without a secret in
+> this public repo. Upstream refuses to boot without it.
+
 ## Gallery & icons
 
 - Screenshots (`1.webp`, `2.webp`, 2160×1350) are captured live from running
@@ -172,6 +199,21 @@ defaults match the upstream defaults.
   `ghcr.io/weirdlywild/solanki-lab-browser-use` (linux/amd64) and pushes it to
   GHCR. When bumping, update `Dockerfile`, the workflow `VERSION`, and the
   pinned digest in `solanki-lab-browser-use/docker-compose.yml`.
+- **Paperclip** ships a public multi-arch image, so there is nothing to build.
+  The compose file pins it by digest. Upstream only publishes moving channel
+  tags (`latest`, `beta`, `canary`, `nightly`) plus `sha-*` tags — there are no
+  semver tags — so resolve a tag to its `docker-content-digest` and update both
+  the manifest `version` and the digest in `solanki-lab-paperclip/docker-compose.yml`:
+
+  ```bash
+  ghcr_token=$(curl -s "https://ghcr.io/token?scope=repository:paperclipai/paperclip:pull&service=ghcr.io" | jq -r .token)
+  curl -sI -H "Authorization: Bearer $ghcr_token" \
+    -H 'Accept: application/vnd.oci.image.index.v1+json' \
+    https://ghcr.io/v2/paperclipai/paperclip/manifests/latest | grep -i docker-content-digest
+  ```
+
+  The `version` field tracks upstream's own build stamp, readable from the image
+  config label `org.opencontainers.image.version`.
 - **Lint** both apps with the official linter:
 
   ```bash
@@ -189,4 +231,5 @@ defaults match the upstream defaults.
 
 - **Browser Use (re-browser-use fork)**: MIT. `mcp-proxy`: MIT.
 - **MCP Gateway**: MIT. Image build is trivial (see `Dockerfile`).
+- **Paperclip**: MIT (upstream image is used unmodified).
 - This store repo itself: MIT (see `LICENSE`).
