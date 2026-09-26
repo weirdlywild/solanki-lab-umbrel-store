@@ -10,7 +10,7 @@ Community App Store for umbrelOS. Add this repo in **App Store → ⋮ → Commu
 
 | App | ID | Version | Image | Notes |
 |---|---|---|---|---|
-| [Browser Use](https://github.com/imamousenotacat/re-browser-use) | `solanki-lab-browser-use` | 0.9.4 | `ghcr.io/weirdlywild/solanki-lab-browser-use` (self-built) | AI browser automation MCP server (re-browser-use fork) |
+| [Browser Use](https://github.com/imamousenotacat/re-browser-use) | `solanki-lab-browser-use` | 0.9.5 | `ghcr.io/weirdlywild/solanki-lab-browser-use` (self-built) | AI browser automation MCP server (re-browser-use fork) |
 | [Fiberplane MCP Gateway](https://github.com/fiberplane/mcp-gateway) | `solanki-lab-mcp-gateway` | 0.7.1 | `ghcr.io/weirdlywild/mcp-gateway` (self-built) | MCP proxy, registry & traffic capture |
 | [Paperclip](https://github.com/paperclipai/paperclip) | `solanki-lab-paperclip` | 2026.916.1 | `ghcr.io/paperclipai/paperclip` (upstream, digest-pinned) | Agent orchestration control plane — org chart, goals, budgets, governance |
 

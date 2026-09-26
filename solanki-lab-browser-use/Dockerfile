@@ -4,6 +4,17 @@ ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     ANONYMIZED_TELEMETRY=false
 
+# `uv`/`uvx` are needed at RUNTIME, not only at build time. The workaround in
+# the CMD below covers the startup path (mcp-proxy spawns `browser-use --mcp`
+# directly), but re-browser-use's navigation path shells out to a bare `uvx`.
+# Without it every navigation fails with
+#   FileNotFoundError: [Errno 2] No such file or directory: 'uvx'
+# and the session is stranded on about:blank with no tabs, while the MCP call
+# itself still returns 202. python:3.11-slim ships no uv, so copy the official
+# static binaries in. /bin is on root's PATH, which is what this image runs as,
+# and unlike an ENV PATH it survives the `bash -lc` login shell in the CMD.
+COPY --from=ghcr.io/astral-sh/uv:0.12.19 /uv /uvx /bin/
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
@@ -39,7 +50,8 @@ RUN pip install --no-cache-dir "mcp<2" "re-browser-use[cli]" mcp-proxy pydantic-
 
 # Install the Chromium browser browser-use drives (headless Linux). The fork
 # pulls the `cdp-use` driver but still needs a Chromium binary; playwright is
-# the standard way to fetch it (uvx is not present in this base image).
+# the standard way to fetch it. The `uvx` that the upstream docs suggest is now
+# present (see the COPY above), so the plain playwright path is used.
 RUN pip install --no-cache-dir playwright \
     && playwright install chromium --with-deps \
     || playwright install chromium
@@ -52,5 +64,6 @@ ENV BROWSER_USE_HEADLESS=true
 
 # --pass-environment is required so the spawned stdio server finds the Python
 # interpreter. Call the pip-installed `browser-use` binary directly (not uvx) so
-# the pydantic-settings fix in the build step is honored.
+# the pydantic-settings fix in the build step is honored. The runtime still
+# needs uvx on PATH for navigation, which the COPY near the top provides.
 CMD ["bash", "-lc", "exec mcp-proxy --host=0.0.0.0 --port=8766 --pass-environment -- browser-use --mcp"]

@@ -8,7 +8,7 @@ on:
 
 env:
   IMAGE: ghcr.io/weirdlywild/solanki-lab-browser-use
-  VERSION: "0.9.4-patch.1"
+  VERSION: "0.9.5-patch.1"
 
 jobs:
   build:
