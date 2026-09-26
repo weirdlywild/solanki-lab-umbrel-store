@@ -2,7 +2,7 @@ manifestVersion: 1.1
 id: solanki-lab-browser-use
 category: developer
 name: Browser Use
-version: "0.9.8-patch.1"
+version: "0.9.9-patch.1"
 tagline: AI browser automation (re-browser-use) as a self-hosted MCP server
 description: >-
   Browser Use lets AI agents drive a real browser to click, type, search and
@@ -73,6 +73,16 @@ environment:
       default LLM entry hardcodes the literal key 'your-openai-api-key-here'
       (config.py:290), so with no key every agent call is sent to
       api.openai.com and fails with "Incorrect API key provided".
+  - name: OPENAI_BASE_URL
+    services:
+      - browser-use
+    default: ""
+    note: >-
+      Endpoint override for the OpenAI-compatible client. Leave empty for
+      api.openai.com. browser_use's MCP server only passes an explicit
+      base_url when config.json supplies one, and when it does not, the
+      openai SDK falls back to this variable. Set it to
+      https://openrouter.ai/api/v1 to route agent calls through OpenRouter.
   - name: DEFAULT_LLM
     services:
       - browser-use
