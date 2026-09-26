@@ -2,7 +2,7 @@ manifestVersion: 1.1
 id: solanki-lab-browser-use
 category: developer
 name: Browser Use
-version: "0.9.5-patch.1"
+version: "0.9.6-patch.1"
 tagline: AI browser automation (re-browser-use) as a self-hosted MCP server
 description: >-
   Browser Use lets AI agents drive a real browser to click, type, search and

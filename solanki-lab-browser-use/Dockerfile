@@ -49,12 +49,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN pip install --no-cache-dir "mcp<2" "re-browser-use[cli]" mcp-proxy pydantic-settings
 
 # Install the Chromium browser browser-use drives (headless Linux). The fork
-# pulls the `cdp-use` driver but still needs a Chromium binary; playwright is
-# the standard way to fetch it. The `uvx` that the upstream docs suggest is now
-# present (see the COPY above), so the plain playwright path is used.
+# pulls the `cdp-use` driver but still needs a Chromium binary. Its README is
+# explicit about the flags:
+#   uvx playwright install chromium --with-deps --no-shell
+# `--no-shell` is load-bearing: without it Playwright also installs
+# chromium-headless-shell, and the fork's CDP driver does not drive that build.
+# The `||` fallback keeps the build green if the --with-deps apt step fails.
 RUN pip install --no-cache-dir playwright \
-    && playwright install chromium --with-deps \
-    || playwright install chromium
+    && playwright install chromium --with-deps --no-shell \
+    || playwright install chromium --no-shell
 
 # The MCP server is exposed over SSE at http://<host>:8766/sse by mcp-proxy,
 # which spawns the re-browser-use stdio MCP server as a subprocess.

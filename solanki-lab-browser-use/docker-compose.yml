@@ -14,6 +14,11 @@ services:
     environment:
       ANONYMIZED_TELEMETRY: "false"
       BROWSER_USE_HEADLESS: "true"
+      # The fork's README sets both of these. Without the skip flag the CLI
+      # insists on a provider key at startup even for the primitive tools
+      # (navigate/click/type) that drive the browser directly and need no LLM.
+      SKIP_LLM_API_KEY_VERIFICATION: "true"
+      HEADLESS_EVALUATION: "false"
       # LLM provider key consumed by the browser-use agent for steering.
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
