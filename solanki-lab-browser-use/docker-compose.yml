@@ -7,7 +7,7 @@ services:
       APP_PORT: 8766
 
   browser-use:
-    image: ghcr.io/weirdlywild/solanki-lab-browser-use:0.9.5-patch.1@sha256:ed18e9194afd5d0463f01ee86d69a0f2c48870ebc9c7c770cbbcd34130ebbfbf
+    image: ghcr.io/weirdlywild/solanki-lab-browser-use:0.9.6-patch.1@sha256:83990dc3134fe4c4ce36ae7a95a8ff9a6f36e3564473334d3ad29dd0811bdac1
     restart: on-failure
     init: true
     shm_size: 2g
