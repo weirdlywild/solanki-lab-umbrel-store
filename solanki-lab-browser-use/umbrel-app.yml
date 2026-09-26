@@ -2,7 +2,7 @@ manifestVersion: 1.1
 id: solanki-lab-browser-use
 category: developer
 name: Browser Use
-version: "0.9.7-patch.1"
+version: "0.9.8-patch.1"
 tagline: AI browser automation (re-browser-use) as a self-hosted MCP server
 description: >-
   Browser Use lets AI agents drive a real browser to click, type, search and
@@ -64,6 +64,24 @@ environment:
       - "true"
       - "false"
     note: Disable anonymized telemetry.
+  - name: OPENROUTER_API_KEY
+    services:
+      - browser-use
+    default: ""
+    note: >-
+      OpenRouter API key for agent steering. Required because browser_use's
+      default LLM entry hardcodes the literal key 'your-openai-api-key-here'
+      (config.py:290), so with no key every agent call is sent to
+      api.openai.com and fails with "Incorrect API key provided".
+  - name: DEFAULT_LLM
+    services:
+      - browser-use
+    default: "openrouter/stealth/space-bunny-alpha"
+    note: >-
+      Model the browser agent uses, as provider/model. Read by
+      browser_use/config.py and resolved through get_llm_by_name in
+      agent/service.py. If this build rejects the name it raises a ValueError
+      listing the aliases it accepts; pick one of those instead.
 releaseNotes: >-
   - Packages re-browser-use (0.9.4-patch) with Cloudflare/NopeCHA support.
   - Exposes the stdio MCP server over HTTP/SSE via mcp-proxy on port 8766.

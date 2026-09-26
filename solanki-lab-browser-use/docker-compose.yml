@@ -19,20 +19,14 @@ services:
       # (navigate/click/type) that drive the browser directly and need no LLM.
       SKIP_LLM_API_KEY_VERIFICATION: "true"
       HEADLESS_EVALUATION: "false"
-      # Provider selection. browser_use/config.py hardcodes a default LLM entry
-      # with the literal key 'your-openai-api-key-here' (config.py:290), so an
-      # empty OPENAI_API_KEY silently sends every request to api.openai.com and
-      # fails. DEFAULT_LLM is read at config.py:164 and used by
-      # agent/service.py:185 as the default model, and its value is
-      # provider/model. The installed build ships an `openrouter` provider
-      # (browser_use/llm/openrouter), so an OpenAI-compatible gateway is
-      # selectable without any code change.
+      # Provider credentials are deliberately NOT declared here. Every variable
+      # in this app is an exposed environment entry in umbrel-app.yml, and
+      # umbreld merges the operator's values into
+      # docker-compose.umbrel-user-settings.yml as literals.
       #
-      # Both values are interpolated rather than literal so no secret is ever
-      # committed. Supply them from a .env file in the app's compose project
-      # directory, which umbreld's docker compose invocation reads.
-      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
-      DEFAULT_LLM: ${DEFAULT_LLM:-}
-      # LLM provider key consumed by the browser-use agent for steering.
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # Do not add `${VAR}` interpolation for them. Compose resolves `${VAR:-}`
+      # to an empty string when the variable is absent from its own
+      # environment, which overwrites the merged literal and delivers an empty
+      # value to the container. That is why OPENROUTER_API_KEY and DEFAULT_LLM
+      # arrived present but empty. Declaring the keys only in umbrel-app.yml
+      # keeps secrets out of git and lets the merge win.
