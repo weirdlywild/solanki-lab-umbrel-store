@@ -1,45 +1,30 @@
 #!/usr/bin/env bash
-# Post-start bootstrap for MCPJungle.
+# Post-start hook for MCPJungle in development mode.
 #
-# MCPJungle is unusable until the server is initialised. Before POST /init every
-# route returns {"error":"server is not initialized"} - including the dashboard,
-# so the dashboard cannot be used to bootstrap itself. Upstream's answer is for a
-# human to run `mcpjungle init-server` from a client machine, which needs the CLI
-# and a shell on another host.
+# In development mode the server enforces no authentication: no client tokens, no
+# allow lists. That is a deliberate trade for the dashboard UI, which MCPJungle
+# only serves in this mode - in enterprise mode / returns 404, so the app has no
+# landing page and fails the umbrel App Store gate that requires a useful web UI
+# or status page.
 #
-# On umbrel there is no such machine: the CLI is not on the operator's PATH, and
-# the unprivileged app user cannot `docker exec` to reach the one inside the
-# container. Without this hook the app is dead on arrival and the only fix is a
-# root shell on the device.
+# The compensating control is in the compose file, not here: umbrel's app_proxy
+# auth is left ON so the dashboard and /api/v0 require an umbrel login, and only
+# /mcp is whitelisted because MCP clients cannot send umbrel cookies. See
+# PROXY_AUTH_WHITELIST in docker-compose.yml.
 #
-# So the same bootstrap is done over the HTTP API instead, which the server
-# documents as unauthenticated:
-#
-#   POST /init              -> {"admin_access_token": "..."}
-#   POST /api/v0/clients    -> {"access_token": "..."}
-#
-# Tokens are written under ${APP_DATA_DIR}/data with mode 600 and are never
-# printed to the log. The admin token is passed to curl through a header file
-# rather than argv so it does not appear in the process list.
+# What is left for this hook is the one thing that is genuinely useful to
+# automate: making sure the Browser Use upstream is registered, so the gateway
+# has something to serve. Registration is best-effort - if Browser Use is not
+# installed, the log says so and the app is still usable for manual setup.
 set -euo pipefail
-umask 077
 
 APP_DIR="${APP_DATA_DIR:-$(readlink -f "$(dirname "${BASH_SOURCE[0]}")/..")}"
-DATA_DIR="${APP_DIR}/data"
 PORT="${APP_PROXY_PORT:-8080}"
-
-ADMIN_FILE="${DATA_DIR}/admin-access-token"
-CLIENT_FILE="${DATA_DIR}/client-access-token"
-HDR_FILE="${DATA_DIR}/.admin-header"
-CLIENT_NAME="default"
-
-mkdir -p "$DATA_DIR"
+BU_NAME="browser-use"
+BU_URL="${MCPJUNGLE_BROWSER_USE_URL:-http://solanki-lab-browser-use_browser-use_1:8766/mcp}"
 
 log() { echo "mcpjungle: $*" >&2; }
 
-# Which base URL reaches the app depends on how app_proxy binds, so probe the
-# likely candidates rather than assume loopback works. BASE is exported for the
-# log line only; curl calls use "${BASE}/..." after this point.
 BASE=""
 for host in 127.0.0.1 "${DEVICE_HOSTNAME:-}" "${DEVICE_DOMAIN_NAME:-}"; do
   [ -n "$host" ] || continue
@@ -49,8 +34,6 @@ for host in 127.0.0.1 "${DEVICE_HOSTNAME:-}" "${DEVICE_DOMAIN_NAME:-}"; do
   fi
 done
 
-# Containers can report ready before the listener accepts connections, so allow
-# a short settling window before giving up.
 if [ -z "$BASE" ]; then
   for _ in $(seq 1 15); do
     for host in 127.0.0.1 "${DEVICE_HOSTNAME:-}" "${DEVICE_DOMAIN_NAME:-}"; do
@@ -65,127 +48,28 @@ if [ -z "$BASE" ]; then
 fi
 
 if [ -z "$BASE" ]; then
-  log "no healthy listener on port ${PORT}; skipping bootstrap"
+  log "no healthy listener on port ${PORT}; skipping registration"
   exit 0
 fi
 
-# Extract a flat string field from a small JSON object without needing jq.
-json_field() {
-  printf '%s' "$1" | tr ',' '\n' | grep "\"$2\"" | head -n1 | cut -d'"' -f4
-}
+# POST /api/v0/servers {name, transport, url} -> 201 created, 202 accepted,
+# 409 already registered. All three are success.
+payload="{\"name\":\"${BU_NAME}\",\"transport\":\"streamable_http\",\"description\":\"Browser automation\",\"url\":\"${BU_URL}\"}"
+raw=$(curl -sS -X POST "${BASE}/api/v0/servers" \
+  -H 'content-type: application/json' \
+  -d "$payload" -w $'\n%{http_code}' 2>/dev/null || true)
+status=$(printf '%s' "$raw" | tail -n1)
+body=$(printf '%s' "$raw" | sed '$d')
 
-# POST and split the response into body and status, so a failure can report what
-# the server actually said. curl -f would discard both, which makes a rejected
-# payload indistinguishable from a network error. The body is only ever logged on
-# failure, and a failed /init carries no token.
-post() {
-  curl -sS -X POST "$1" -H 'content-type: application/json' "${@:3}" \
-    -d "$2" -w $'\n%{http_code}' 2>/dev/null || true
-}
-
-# Authenticated GET (used to read the current allow list before changing it).
-get_authed() {
-  curl -sS "$1" -H "@$2" 2>/dev/null || true
-}
-
-# Authenticated PUT. $3 is the header file holding the admin bearer token.
-put_authed() {
-  curl -sS -X PUT "$1" -H 'content-type: application/json' -H "@$3" \
-    -d "$2" -w $'\n%{http_code}' 2>/dev/null || true
-}
-
-# Both steps are guarded by their output file, so this is safe to run on every
-# start: it does the work once and then never touches the server again.
-if [ ! -s "$ADMIN_FILE" ]; then
-  # "enterprise" is the canonical mode. The value "production" is a deprecated
-  # alias for the same thing and is still accepted; anything else is rejected
-  # with "invalid server mode".
-  raw=$(post "${BASE}/init" '{"mode":"enterprise"}')
-  status=$(printf '%s' "$raw" | tail -n1)
-  body=$(printf '%s' "$raw" | sed '$d')
-  if [ "$status" = "200" ]; then
-    admin_token=$(json_field "$body" admin_access_token || true)
-    if [ -n "$admin_token" ]; then
-      printf '%s' "$admin_token" > "$ADMIN_FILE"
-      chmod 600 "$ADMIN_FILE"
-      log "initialised in enterprise mode; admin token written to ${ADMIN_FILE}"
-    else
-      log "POST /init returned 200 but no admin_access_token in the body"
-    fi
-  else
-    log "POST /init returned HTTP ${status:-none}: $(printf '%s' "$body" | head -c 200)"
-  fi
-fi
-
-if [ -s "$ADMIN_FILE" ]; then
-  printf 'Authorization: Bearer %s\n' "$(cat "$ADMIN_FILE")" > "$HDR_FILE"
-  BU_URL="${MCPJUNGLE_BROWSER_USE_URL:-http://solanki-lab-browser-use_browser-use_1:8766/mcp}"
-  BU_NAME="browser-use"
-
-  # Register the upstream. This is the one deliberate coupling between two apps
-  # in this store: a gateway whose client cannot reach anything is not finished.
-  # The container DNS name keeps traffic on the shared umbrel network instead of
-  # hairpinning through the host. 409 counts as already-registered.
-  #
-  # POST /api/v0/servers {name, transport, url} -> 201 / 202
-  reg_payload="{\"name\":\"${BU_NAME}\",\"transport\":\"streamable_http\",\"description\":\"Browser automation\",\"url\":\"${BU_URL}\"}"
-  raw=$(post "${BASE}/api/v0/servers" "$reg_payload" -H "@${HDR_FILE}")
-  status=$(printf '%s' "$raw" | tail -n1)
-  registered=0
-  case "$status" in
-    201|202|409) registered=1 ;;
-    *) log "could not register '${BU_NAME}' (HTTP ${status:-none}); create it with: mcpjungle register --name ${BU_NAME} --url ${BU_URL}" ;;
-  esac
-
-  # Create the client if it does not exist yet. The access token is only ever
-  # returned here, so this must stay guarded on the token file - PUT does not
-  # hand back a new token and the existing one keeps working.
-  if [ ! -s "$CLIENT_FILE" ]; then
-    allow_list="[]"
-    [ "$registered" -eq 1 ] && allow_list="[\"${BU_NAME}\"]"
-    payload="{\"name\":\"${CLIENT_NAME}\",\"description\":\"Pre-created by the umbrel post-start hook\",\"is_custom_access_token\":false,\"allow_list\":${allow_list}}"
-    raw=$(post "${BASE}/api/v0/clients" "$payload" -H "@${HDR_FILE}")
-    status=$(printf '%s' "$raw" | tail -n1)
-    body=$(printf '%s' "$raw" | sed '$d')
-    client_token=$(json_field "$body" access_token || true)
-    if [ -n "$client_token" ]; then
-      printf '%s' "$client_token" > "$CLIENT_FILE"
-      chmod 600 "$CLIENT_FILE"
-      log "created MCP client '${CLIENT_NAME}' with allow_list ${allow_list}"
-      log "send that token as 'Authorization: Bearer <token>' to ${BASE}/mcp"
-    else
-      log "POST /api/v0/clients returned HTTP ${status:-none}: $(printf '%s' "$body" | head -c 200)"
-    fi
-  fi
-
-  # Reconcile the allow list. Runs on every start and is a no-op once the server
-  # is already allowed, so an install created by an earlier version of this hook
-  # gains access on the next restart instead of staying empty forever.
-  #
-  # PUT /api/v0/clients/{name} {name, allow_list, ...} -> 200
-  if [ "$registered" -eq 1 ] && [ -s "$CLIENT_FILE" ]; then
-    raw=$(get_authed "${BASE}/api/v0/clients" "@${HDR_FILE}")
-    if printf '%s' "$raw" | grep -q "\"${BU_NAME}\""; then
-      : # already allowed, nothing to do
-    else
-      # Preserve whatever the operator allowed by hand: read the current list and
-      # add ours rather than overwriting with a hardcoded one.
-      current=$(printf '%s' "$raw" | tr '}' '\n' | grep "\"name\":\"${CLIENT_NAME}\"" | head -n1)
-      existing=$(printf '%s' "$current" | grep -o '"allow_list":\[[^]]*\]' | head -n1 | sed 's/.*\[//;s/\]//')
-      merged="\"${BU_NAME}\""
-      if [ -n "${existing// /}" ]; then
-        merged="\"${BU_NAME}\",${existing}"
-      fi
-      payload="{\"name\":\"${CLIENT_NAME}\",\"allow_list\":[${merged}]}"
-      raw=$(put_authed "${BASE}/api/v0/clients/${CLIENT_NAME}" "$payload" "@${HDR_FILE}")
-      status=$(printf '%s' "$raw" | tail -n1)
-      if [ "$status" = "200" ]; then
-        log "added '${BU_NAME}' to the allow list of '${CLIENT_NAME}' (existing entries preserved)"
-      else
-        log "could not update the allow list (HTTP ${status:-none})"
-      fi
-    fi
-  fi
-
-  rm -f "$HDR_FILE"
-fi
+case "$status" in
+  201|202)
+    log "registered upstream '${BU_NAME}' (HTTP ${status})"
+    ;;
+  409)
+    : # already registered, nothing to do
+    ;;
+  *)
+    log "could not register '${BU_NAME}' (HTTP ${status:-none}): $(printf '%s' "$body" | head -c 200)"
+    log "add it from the dashboard at ${BASE}/ or with: mcpjungle register --name ${BU_NAME} --url ${BU_URL}"
+    ;;
+esac

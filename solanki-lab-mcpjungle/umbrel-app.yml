@@ -2,8 +2,8 @@ manifestVersion: 1.1
 id: solanki-lab-mcpjungle
 category: developer
 name: MCPJungle
-version: "0.4.6-patch.6"
-tagline: Self-hosted MCP gateway with a dashboard, client tokens, and deny-by-default access control
+version: "0.4.6-patch.7"
+tagline: Self-hosted MCP gateway with a web dashboard for registering and managing your MCP servers
 description: >-
   MCPJungle is a single registry and gateway for all your MCP servers. Register
   each server once, then point every AI client at one endpoint and let agents
@@ -11,64 +11,33 @@ description: >-
   tool from a server called `github` is exposed as `github/git_commit`.
 
 
-  🔐 This app runs in **enterprise mode**, which is what turns on client
-  authentication. In this mode MCPJungle is deny-by-default: no client can reach
-  any registered server until you explicitly create one and allow it. Each
-  client gets an access token that it sends as `Authorization: Bearer <token>`,
-  and every tool call is attributed to that client.
+  🖥️ **Runs in development mode**, which is what makes the dashboard available:
+  MCPJungle only serves its web UI in development mode, and a package that opens
+  to a 404 does not meet umbrel's requirement for a usable web UI. Open it at
+  `http://<your-umbrel>:8080/` to register MCP servers, inspect their tools, and
+  manage clients.
 
 
-  Enterprise mode is a runtime mode of the same open-source binary, not a paid
-  tier. There is no licence key and no vendor account. It is exposed here as a
-  fixed value and deliberately not surfaced as an environment variable, because
-  switching it back to `development` would silently remove authentication and
-  make every registered server reachable by anything that can reach this port.
+  ⚠️ **Development mode means MCPJungle enforces no authentication of its own.**
+  There are no client tokens and no allow lists. Anyone who can reach port 8080
+  can use every registered MCP server - including Browser Use, which drives a
+  real browser with your network access. Do not expose this port to the internet,
+  and prefer Tailscale over plain LAN access.
 
 
-  🔧 No manual setup. A post-start hook initialises the server on first start
-  and pre-creates an MCP client called `default`, both over the HTTP API. The
-  tokens land in this app's data directory with mode 600 and are never written
-  to git or to the install log:
-
-  - `data/admin-access-token` - gateway admin
-  - `data/client-access-token` - send this one as `Authorization: Bearer` to
-    the `/mcp` endpoint
-
-  The hook also registers the Browser Use upstream over the shared umbrel
-  network and allows it for that client, so a fresh install is usable with no
-  further steps. It reconciles on every start: if the upstream is missing from
-  the client's allow list it is added, preserving any servers you have allowed
-  yourself. If Browser Use is not installed the client is still created, with an
-  empty allow list and nothing reachable.
+  🔒 What is still protected: Umbrel's app-proxy authentication is left **on**,
+  and only `/mcp` is whitelisted, because MCP clients cannot send Umbrel cookies.
+  So the dashboard and the `/api/v0` management API both require an Umbrel login.
+  The open surface is the `/mcp` protocol endpoint alone.
 
 
-  ⚠️ **There is no web dashboard in this mode.** MCPJungle only serves its
-  dashboard UI in development mode, which is exactly the mode this app exists to
-  avoid, so `/` returns 404 by design. Management is the REST API under
-  `/api/v0` plus the `mcpjungle` CLI. `GET /health` and `GET /metadata` are the
-  only unauthenticated endpoints.
+  🔧 A post-start hook registers the Browser Use upstream automatically over the
+  shared umbrel network, so a fresh install has something to serve. If Browser Use
+  is not installed, add one from the dashboard instead - nothing else is needed.
 
 
-  ⚠️ MCP clients cannot complete an Umbrel login, so this app's Umbrel app-proxy
-  authentication is intentionally off. MCPJungle's own per-client access tokens
-  are the authentication layer for both the `/mcp` endpoint and the dashboard.
-  Keep port 8080 on your LAN or Tailscale and do not expose it to the internet.
-releaseNotes: >-
-  - Hook now reconciles rather than only bootstrapping. An install created by an earlier version of the hook had a client with an empty allow list that nothing would ever fill, because the whole block was guarded on the client token already existing. It now reads the current allow list, adds what is missing, and preserves entries added by hand
-  - Hook now also registers the Browser Use upstream and allows it for the pre-created client, so a fresh install is usable with no manual steps
-  - Correct the dashboard claim. MCPJungle only serves its dashboard in development mode, so there is no dashboard in enterprise mode and / returns 404 by design. The earlier description pointed at a URL that cannot exist
-  - Fix the self-initialising hook: it posted {"mode":"prod"}, but the server's mode constants are "development", "enterprise" and the deprecated alias "production". "prod" was rejected, so the hook logged a failure and the app stayed uninitialised. Now sends "enterprise"
-  - Hook failures now log the HTTP status and a truncated response body instead of discarding them. curl -f made a rejected payload indistinguishable from a network error, which is what made this hard to diagnose
-  - Self-initialising install: a post-start hook performs the enterprise-mode bootstrap over the HTTP API (POST /init, then POST /api/v0/clients) and writes both tokens under the app data directory with mode 600. Previously the app was unusable until someone ran `mcpjungle init-server` by hand, which needed root on the device
-  - Fix Umbrel app-proxy auth: the manifest appProxyAuth block was inert and every request was redirected to the Umbrel login. Replaced with PROXY_AUTH_ADD "false" on the app_proxy service, which is the documented mechanism and survives a fresh install
-  - Remove the non-functional manifest appProxyAuth block rather than leave a setting that claims to disable auth but does not
-  - Fix startup crash loop: OpenTelemetry defaulted to enabled, and the Go OTel SDK cannot build a default resource in this distroless cgo-free image without $USER, so the process exited before binding and restart:on-failure looped it while the UI still showed ready
-  - OTEL_ENABLED now defaults to false and USER is injected, so it can be enabled safely
-  - Packages upstream ghcr.io/mcpjungle/mcpjungle 0.4.6 (linux/amd64 + linux/arm64), digest-pinned
-  - Runs in enterprise mode: per-client access tokens and deny-by-default access control
-  - Single container with embedded SQLite - no separate database service
-  - Replaces the Fiberplane MCP Gateway app, whose per-server proxy path /s/<name>/mcp is unauthenticated by design
-developer: MCPJungle
+  ⚠️ Keep port 8080 on your LAN or Tailscale and do not expose it to the
+  internet or through a public reverse-proxy hostname.
 website: https://github.com/mcpjungle/MCPJungle
 dependencies: []
 repo: https://github.com/mcpjungle/MCPJungle
@@ -78,11 +47,8 @@ gallery: []
 path: ""
 defaultUsername: ""
 defaultPassword: ""
-# NOTE: there is deliberately no `appProxyAuth` block here. One was present and
-# set `enabled: false`, and it was inert - the app still redirected to Umbrel's
-# app-auth login. The setting that works is PROXY_AUTH_ADD: "false" on the
-# app_proxy service in docker-compose.yml. Auth for this app is MCPJungle's own
-# admin login and per-client access token.
+# No appProxyAuth block: it was tried and proved inert on this build. The
+# working control is PROXY_AUTH_ADD / PROXY_AUTH_WHITELIST in the compose.
 icon: https://cdn.jsdelivr.net/gh/weirdlywild/solanki-lab-umbrel-store@main/solanki-lab-mcpjungle/icon.svg
 environment:
   - name: MCP_SERVER_INIT_REQ_TIMEOUT_SEC
