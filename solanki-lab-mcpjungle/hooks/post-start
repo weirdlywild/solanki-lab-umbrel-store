@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+# Post-start bootstrap for MCPJungle.
+#
+# MCPJungle is unusable until the server is initialised. Before POST /init every
+# route returns {"error":"server is not initialized"} - including the dashboard,
+# so the dashboard cannot be used to bootstrap itself. Upstream's answer is for a
+# human to run `mcpjungle init-server` from a client machine, which needs the CLI
+# and a shell on another host.
+#
+# On umbrel there is no such machine: the CLI is not on the operator's PATH, and
+# the unprivileged app user cannot `docker exec` to reach the one inside the
+# container. Without this hook the app is dead on arrival and the only fix is a
+# root shell on the device.
+#
+# So the same bootstrap is done over the HTTP API instead, which the server
+# documents as unauthenticated:
+#
+#   POST /init              -> {"admin_access_token": "..."}
+#   POST /api/v0/clients    -> {"access_token": "..."}
+#
+# Tokens are written under ${APP_DATA_DIR}/data with mode 600 and are never
+# printed to the log. The admin token is passed to curl through a header file
+# rather than argv so it does not appear in the process list.
+set -euo pipefail
+umask 077
+
+APP_DIR="${APP_DATA_DIR:-$(readlink -f "$(dirname "${BASH_SOURCE[0]}")/..")}"
+DATA_DIR="${APP_DIR}/data"
+PORT="${APP_PROXY_PORT:-8080}"
+
+ADMIN_FILE="${DATA_DIR}/admin-access-token"
+CLIENT_FILE="${DATA_DIR}/client-access-token"
+HDR_FILE="${DATA_DIR}/.admin-header"
+CLIENT_NAME="default"
+
+mkdir -p "$DATA_DIR"
+
+log() { echo "mcpjungle: $*" >&2; }
+
+# Which base URL reaches the app depends on how app_proxy binds, so probe the
+# likely candidates rather than assume loopback works. BASE is exported for the
+# log line only; curl calls use "${BASE}/..." after this point.
+BASE=""
+for host in 127.0.0.1 "${DEVICE_HOSTNAME:-}" "${DEVICE_DOMAIN_NAME:-}"; do
+  [ -n "$host" ] || continue
+  if curl -fsS -o /dev/null --max-time 5 "http://${host}:${PORT}/health" 2>/dev/null; then
+    BASE="http://${host}:${PORT}"
+    break
+  fi
+done
+
+# Containers can report ready before the listener accepts connections, so allow
+# a short settling window before giving up.
+if [ -z "$BASE" ]; then
+  for _ in $(seq 1 15); do
+    for host in 127.0.0.1 "${DEVICE_HOSTNAME:-}" "${DEVICE_DOMAIN_NAME:-}"; do
+      [ -n "$host" ] || continue
+      if curl -fsS -o /dev/null --max-time 5 "http://${host}:${PORT}/health" 2>/dev/null; then
+        BASE="http://${host}:${PORT}"
+        break 2
+      fi
+    done
+    sleep 2
+  done
+fi
+
+if [ -z "$BASE" ]; then
+  log "no healthy listener on port ${PORT}; skipping bootstrap"
+  exit 0
+fi
+
+# Extract a flat string field from a small JSON object without needing jq.
+json_field() {
+  printf '%s' "$1" | tr ',' '\n' | grep "\"$2\"" | head -n1 | cut -d'"' -f4
+}
+
+# Both steps are guarded by their output file, so this is safe to run on every
+# start: it does the work once and then never touches the server again.
+if [ ! -s "$ADMIN_FILE" ]; then
+  if response=$(curl -fsS -X POST "${BASE}/init" \
+        -H 'content-type: application/json' \
+        -d '{"mode":"prod"}' 2>/dev/null); then
+    admin_token=$(json_field "$response" admin_access_token || true)
+    if [ -n "$admin_token" ]; then
+      printf '%s' "$admin_token" > "$ADMIN_FILE"
+      chmod 600 "$ADMIN_FILE"
+      log "initialised in enterprise mode; admin token written to ${ADMIN_FILE}"
+    else
+      log "POST /init succeeded but no admin_access_token in the response"
+    fi
+  else
+    log "POST /init failed; initialise manually with: mcpjungle init-server"
+  fi
+fi
+
+if [ ! -s "$CLIENT_FILE" ] && [ -s "$ADMIN_FILE" ]; then
+  printf 'Authorization: Bearer %s\n' "$(cat "$ADMIN_FILE")" > "$HDR_FILE"
+  body="{\"name\":\"${CLIENT_NAME}\",\"description\":\"Pre-created by the umbrel post-start hook\",\"is_custom_access_token\":false,\"allow_list\":[]}"
+  if response=$(curl -fsS -X POST "${BASE}/api/v0/clients" \
+        -H 'content-type: application/json' \
+        -H "@${HDR_FILE}" \
+        -d "$body" 2>/dev/null); then
+    client_token=$(json_field "$response" access_token || true)
+    if [ -n "$client_token" ]; then
+      printf '%s' "$client_token" > "$CLIENT_FILE"
+      chmod 600 "$CLIENT_FILE"
+      log "created MCP client '${CLIENT_NAME}' with an empty allow list; its token is in ${CLIENT_FILE}"
+      log "no servers are allowed yet - add one and tick it for '${CLIENT_NAME}' in the dashboard at ${BASE}/"
+    else
+      log "POST /api/v0/clients succeeded but no access_token in the response"
+    fi
+  else
+    log "could not pre-create an MCP client; create one in the dashboard"
+  fi
+  rm -f "$HDR_FILE"
+fi
