@@ -83,6 +83,17 @@ post() {
     -d "$2" -w $'\n%{http_code}' 2>/dev/null || true
 }
 
+# Authenticated GET (used to read the current allow list before changing it).
+get_authed() {
+  curl -sS "$1" -H "@$2" 2>/dev/null || true
+}
+
+# Authenticated PUT. $3 is the header file holding the admin bearer token.
+put_authed() {
+  curl -sS -X PUT "$1" -H 'content-type: application/json' -H "@$3" \
+    -d "$2" -w $'\n%{http_code}' 2>/dev/null || true
+}
+
 # Both steps are guarded by their output file, so this is safe to run on every
 # start: it does the work once and then never touches the server again.
 if [ ! -s "$ADMIN_FILE" ]; then
@@ -106,37 +117,36 @@ if [ ! -s "$ADMIN_FILE" ]; then
   fi
 fi
 
-if [ ! -s "$CLIENT_FILE" ] && [ -s "$ADMIN_FILE" ]; then
+if [ -s "$ADMIN_FILE" ]; then
   printf 'Authorization: Bearer %s\n' "$(cat "$ADMIN_FILE")" > "$HDR_FILE"
-
-  # Register the Browser Use upstream. This is the one coupling between the two
-  # apps in this store, and it is deliberate: a gateway whose client cannot reach
-  # anything is not finished. Registration is best-effort - if Browser Use is not
-  # installed the client is still created, just with nothing allowed.
-  #
-  # The container DNS name is used rather than the host IP so traffic stays on
-  # the shared umbrel network instead of hairpinning through the host.
   BU_URL="${MCPJUNGLE_BROWSER_USE_URL:-http://solanki-lab-browser-use_browser-use_1:8766/mcp}"
   BU_NAME="browser-use"
-  reg_payload="{\"name\":\"${BU_NAME}\",\"transport\":\"streamable_http\",\"description\":\"Browser automation\",\"url\":\"${BU_URL}\"}"
 
+  # Register the upstream. This is the one deliberate coupling between two apps
+  # in this store: a gateway whose client cannot reach anything is not finished.
+  # The container DNS name keeps traffic on the shared umbrel network instead of
+  # hairpinning through the host. 409 counts as already-registered.
+  #
+  # POST /api/v0/servers {name, transport, url} -> 201 / 202
+  reg_payload="{\"name\":\"${BU_NAME}\",\"transport\":\"streamable_http\",\"description\":\"Browser automation\",\"url\":\"${BU_URL}\"}"
   raw=$(post "${BASE}/api/v0/servers" "$reg_payload" -H "@${HDR_FILE}")
   status=$(printf '%s' "$raw" | tail -n1)
-  body=$(printf '%s' "$raw" | sed '$d')
-  allow_list="[]"
-  if [ "$status" = "201" ] || [ "$status" = "202" ] || [ "$status" = "409" ]; then
-    allow_list="[\"${BU_NAME}\"]"
-    log "upstream '${BU_NAME}' registered (HTTP ${status})"
-  else
-    log "could not register '${BU_NAME}' (HTTP ${status:-none}): $(printf '%s' "$body" | head -c 200)"
-    log "create it later with: mcpjungle register --name ${BU_NAME} --url ${BU_URL}"
-  fi
+  registered=0
+  case "$status" in
+    201|202|409) registered=1 ;;
+    *) log "could not register '${BU_NAME}' (HTTP ${status:-none}); create it with: mcpjungle register --name ${BU_NAME} --url ${BU_URL}" ;;
+  esac
 
-  payload="{\"name\":\"${CLIENT_NAME}\",\"description\":\"Pre-created by the umbrel post-start hook\",\"is_custom_access_token\":false,\"allow_list\":${allow_list}}"
-  raw=$(post "${BASE}/api/v0/clients" "$payload" -H "@${HDR_FILE}")
-  status=$(printf '%s' "$raw" | tail -n1)
-  body=$(printf '%s' "$raw" | sed '$d')
-  if [ "$status" = "201" ] || [ "$status" = "200" ]; then
+  # Create the client if it does not exist yet. The access token is only ever
+  # returned here, so this must stay guarded on the token file - PUT does not
+  # hand back a new token and the existing one keeps working.
+  if [ ! -s "$CLIENT_FILE" ]; then
+    allow_list="[]"
+    [ "$registered" -eq 1 ] && allow_list="[\"${BU_NAME}\"]"
+    payload="{\"name\":\"${CLIENT_NAME}\",\"description\":\"Pre-created by the umbrel post-start hook\",\"is_custom_access_token\":false,\"allow_list\":${allow_list}}"
+    raw=$(post "${BASE}/api/v0/clients" "$payload" -H "@${HDR_FILE}")
+    status=$(printf '%s' "$raw" | tail -n1)
+    body=$(printf '%s' "$raw" | sed '$d')
     client_token=$(json_field "$body" access_token || true)
     if [ -n "$client_token" ]; then
       printf '%s' "$client_token" > "$CLIENT_FILE"
@@ -144,10 +154,38 @@ if [ ! -s "$CLIENT_FILE" ] && [ -s "$ADMIN_FILE" ]; then
       log "created MCP client '${CLIENT_NAME}' with allow_list ${allow_list}"
       log "send that token as 'Authorization: Bearer <token>' to ${BASE}/mcp"
     else
-      log "client creation returned ${status} but no access_token in the body"
+      log "POST /api/v0/clients returned HTTP ${status:-none}: $(printf '%s' "$body" | head -c 200)"
     fi
-  else
-    log "POST /api/v0/clients returned HTTP ${status:-none}: $(printf '%s' "$body" | head -c 200)"
   fi
+
+  # Reconcile the allow list. Runs on every start and is a no-op once the server
+  # is already allowed, so an install created by an earlier version of this hook
+  # gains access on the next restart instead of staying empty forever.
+  #
+  # PUT /api/v0/clients/{name} {name, allow_list, ...} -> 200
+  if [ "$registered" -eq 1 ] && [ -s "$CLIENT_FILE" ]; then
+    raw=$(get_authed "${BASE}/api/v0/clients" "@${HDR_FILE}")
+    if printf '%s' "$raw" | grep -q "\"${BU_NAME}\""; then
+      : # already allowed, nothing to do
+    else
+      # Preserve whatever the operator allowed by hand: read the current list and
+      # add ours rather than overwriting with a hardcoded one.
+      current=$(printf '%s' "$raw" | tr '}' '\n' | grep "\"name\":\"${CLIENT_NAME}\"" | head -n1)
+      existing=$(printf '%s' "$current" | grep -o '"allow_list":\[[^]]*\]' | head -n1 | sed 's/.*\[//;s/\]//')
+      merged="\"${BU_NAME}\""
+      if [ -n "${existing// /}" ]; then
+        merged="\"${BU_NAME}\",${existing}"
+      fi
+      payload="{\"name\":\"${CLIENT_NAME}\",\"allow_list\":[${merged}]}"
+      raw=$(put_authed "${BASE}/api/v0/clients/${CLIENT_NAME}" "$payload" "@${HDR_FILE}")
+      status=$(printf '%s' "$raw" | tail -n1)
+      if [ "$status" = "200" ]; then
+        log "added '${BU_NAME}' to the allow list of '${CLIENT_NAME}' (existing entries preserved)"
+      else
+        log "could not update the allow list (HTTP ${status:-none})"
+      fi
+    fi
+  fi
+
   rm -f "$HDR_FILE"
 fi
