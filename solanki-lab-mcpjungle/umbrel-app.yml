@@ -2,7 +2,7 @@ manifestVersion: 1.1
 id: solanki-lab-mcpjungle
 category: developer
 name: MCPJungle
-version: "0.4.6-patch.1"
+version: "0.4.6-patch.2"
 tagline: Self-hosted MCP gateway with a dashboard, client tokens, and deny-by-default access control
 description: >-
   MCPJungle is a single registry and gateway for all your MCP servers. Register
@@ -36,6 +36,8 @@ description: >-
   are the authentication layer for both the `/mcp` endpoint and the dashboard.
   Keep port 8080 on your LAN or Tailscale and do not expose it to the internet.
 releaseNotes: >-
+  - Fix Umbrel app-proxy auth: the manifest appProxyAuth block was inert and every request was redirected to the Umbrel login. Replaced with PROXY_AUTH_ADD "false" on the app_proxy service, which is the documented mechanism and survives a fresh install
+  - Remove the non-functional manifest appProxyAuth block rather than leave a setting that claims to disable auth but does not
   - Fix startup crash loop: OpenTelemetry defaulted to enabled, and the Go OTel SDK cannot build a default resource in this distroless cgo-free image without $USER, so the process exited before binding and restart:on-failure looped it while the UI still showed ready
   - OTEL_ENABLED now defaults to false and USER is injected, so it can be enabled safely
   - Packages upstream ghcr.io/mcpjungle/mcpjungle 0.4.6 (linux/amd64 + linux/arm64), digest-pinned
@@ -52,13 +54,11 @@ gallery: []
 path: ""
 defaultUsername: ""
 defaultPassword: ""
-# app-proxy auth must stay off: it authenticates with Umbrel cookies, which MCP
-# clients cannot send. The framework routes this port through app_proxy, so
-# leaving proxy auth on would block every MCP client with a login redirect.
-# Authentication for this app is MCPJungle's own per-client access token.
-appProxyAuth:
-  override: true
-  enabled: false
+# NOTE: there is deliberately no `appProxyAuth` block here. One was present and
+# set `enabled: false`, and it was inert - the app still redirected to Umbrel's
+# app-auth login. The setting that works is PROXY_AUTH_ADD: "false" on the
+# app_proxy service in docker-compose.yml. Auth for this app is MCPJungle's own
+# admin login and per-client access token.
 icon: https://cdn.jsdelivr.net/gh/weirdlywild/solanki-lab-umbrel-store@main/solanki-lab-mcpjungle/icon.svg
 environment:
   - name: MCP_SERVER_INIT_REQ_TIMEOUT_SEC

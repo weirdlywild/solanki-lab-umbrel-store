@@ -5,6 +5,18 @@ services:
     environment:
       APP_HOST: solanki-lab-mcpjungle_mcpjungle_1
       APP_PORT: 8080
+      # Umbrel app-proxy auth is disabled deliberately, and this is the only
+      # setting that actually does it. A manifest `appProxyAuth: {enabled: false}`
+      # block was tried first and had no effect: the app still redirected every
+      # request to umbrel's app-auth login until the setting was applied at
+      # runtime. Do not trust that manifest block on this umbrelOS build.
+      #
+      # It has to be off here. MCP clients cannot complete an Umbrel cookie
+      # login, so with proxy auth on every MCP request gets a 302 to a login
+      # page. The Umbrel packaging contract allows this for "an app with its own
+      # login that Umbrel auth would break" - MCPJungle has an admin login plus
+      # per-client access tokens, which is the real authentication layer here.
+      PROXY_AUTH_ADD: "false"
 
   mcpjungle:
     image: ghcr.io/mcpjungle/mcpjungle:0.4.6@sha256:59940d2e3a586ab9a063cf24fa37460bc993686fa056729fd1ada25436123dd9
