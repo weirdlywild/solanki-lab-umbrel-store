@@ -28,7 +28,15 @@ services:
       # literal and not exposed in umbrel-app.yml, because reverting it to
       # `development` removes authentication without any other visible change.
       SERVER_MODE: "enterprise"
-      OTEL_ENABLED: "true"
+      # OpenTelemetry is off by default and must stay off unless USER is set.
+      # When enabled, the Go OTel SDK builds a default resource that calls
+      # user.Current(). In this distroless, cgo-free build that call needs
+      # $USER; without it the initialisation fails, the process exits before it
+      # ever binds, and restart:on-failure turns that into a silent crash loop
+      # that looks "ready" in the UI while nothing listens on the port.
+      # USER below is what makes enabling this safe.
+      OTEL_ENABLED: "false"
       MCP_SERVER_INIT_REQ_TIMEOUT_SEC: "10"
+      USER: "mcpjungle"
     volumes:
       - ${APP_DATA_DIR}/data:/data
