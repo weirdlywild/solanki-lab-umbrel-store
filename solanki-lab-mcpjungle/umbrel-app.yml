@@ -41,6 +41,16 @@ description: >-
 
   ⚠️ Keep port 8080 on your LAN or Tailscale and do not expose it to the
   internet or through a public reverse-proxy hostname.
+releaseNotes: >-
+  - Reverted to enterprise mode after trialling development mode. Development mode serves the dashboard but enforces no authentication at all, so anything reaching port 8080 could drive the registered browser. Enterprise mode restores per-client tokens and deny-by-default; the cost is no dashboard, since MCPJungle only serves its UI in development mode
+  - Restore the post-start bootstrap hook, removed when development mode made its token handling moot. It performs the whole first run over the HTTP API: POST /init for the admin token, then registers the Browser Use upstream and creates an MCP client called "default" with that upstream allowed
+  - The hook reconciles the allow list on every start, preserving entries allowed by hand
+  - Add a status widget so the package meets the App Store requirement for a useful page even though enterprise mode serves no dashboard
+  - Packages upstream ghcr.io/mcpjungle/mcpjungle 0.4.6 (linux/amd64 + linux/arm64), digest-pinned
+  - Single container with embedded SQLite - no separate database service
+  - App-proxy auth off, because MCPJungle authenticates every route itself in enterprise mode
+  - Replaces the Fiberplane MCP Gateway app, whose per-server proxy path /s/<name>/mcp is unauthenticated by design
+developer: MCPJungle
 website: https://github.com/mcpjungle/MCPJungle
 dependencies: []
 repo: https://github.com/mcpjungle/MCPJungle
@@ -53,6 +63,13 @@ defaultPassword: ""
 # No appProxyAuth block: it was tried and proved inert on this build. The
 # working control is PROXY_AUTH_ADD / PROXY_AUTH_WHITELIST in the compose.
 icon: https://cdn.jsdelivr.net/gh/weirdlywild/solanki-lab-umbrel-store@main/solanki-lab-mcpjungle/icon.svg
+widgets:
+  - id: status
+    type: list
+    refresh: 30s
+    endpoint: mcpjungle:8080/health
+    link: ""
+    example: '{"items":["status: ok"],"refresh":"30s"}'
 environment:
   - name: MCP_SERVER_INIT_REQ_TIMEOUT_SEC
     services:
