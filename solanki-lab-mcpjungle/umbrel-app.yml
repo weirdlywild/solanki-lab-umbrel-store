@@ -2,7 +2,7 @@ manifestVersion: 1.1
 id: solanki-lab-mcpjungle
 category: developer
 name: MCPJungle
-version: "0.4.6-patch.7"
+version: "0.4.6-patch.8"
 tagline: Self-hosted MCP gateway with a web dashboard for registering and managing your MCP servers
 description: >-
   MCPJungle is a single registry and gateway for all your MCP servers. Register
@@ -31,9 +31,10 @@ description: >-
   The open surface is the `/mcp` protocol endpoint alone.
 
 
-  🔧 A post-start hook registers the Browser Use upstream automatically over the
-  shared umbrel network, so a fresh install has something to serve. If Browser Use
-  is not installed, add one from the dashboard instead - nothing else is needed.
+  🔧 First run: sign in with your Umbrel account and add your MCP servers from the
+  dashboard. Upstreams that are already HTTP-reachable on the umbrel network can
+  be pointed at directly, for example Browser Use at
+  `http://solanki-lab-browser-use_browser-use_1:8766/mcp`.
 
 
   ⚠️ Keep port 8080 on your LAN or Tailscale and do not expose it to the
