@@ -2,7 +2,7 @@ manifestVersion: 1.1
 id: solanki-lab-mcpjungle
 category: developer
 name: MCPJungle
-version: "0.4.6-patch.9"
+version: "0.4.6-patch.10"
 tagline: Self-hosted MCP gateway with per-client access tokens and deny-by-default access control
 description: >-
   MCPJungle is a single registry and gateway for all your MCP servers. Register
@@ -42,6 +42,7 @@ description: >-
   ⚠️ Keep port 8080 on your LAN or Tailscale and do not expose it to the
   internet or through a public reverse-proxy hostname.
 releaseNotes: >-
+  - Fix a credential leak in the bootstrap hook. The admin token was staged in a cleartext header file for curl, and cleanup relied on a trailing rm. A non-matching grep in the allow-list reconcile returned non-zero, which under set -euo pipefail aborted the hook before the rm, leaving the admin token on disk at data/.admin-header. Cleanup now runs from an EXIT trap, and the greps no longer abort the script
   - Reverted to enterprise mode after trialling development mode. Development mode serves the dashboard but enforces no authentication at all, so anything reaching port 8080 could drive the registered browser. Enterprise mode restores per-client tokens and deny-by-default; the cost is no dashboard, since MCPJungle only serves its UI in development mode
   - Restore the post-start bootstrap hook, removed when development mode made its token handling moot. It performs the whole first run over the HTTP API: POST /init for the admin token, then registers the Browser Use upstream and creates an MCP client called "default" with that upstream allowed
   - The hook reconciles the allow list on every start, preserving entries allowed by hand

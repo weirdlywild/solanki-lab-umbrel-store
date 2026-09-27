@@ -119,6 +119,12 @@ fi
 
 if [ -s "$ADMIN_FILE" ]; then
   printf 'Authorization: Bearer %s\n' "$(cat "$ADMIN_FILE")" > "$HDR_FILE"
+  # The header file holds the admin token in cleartext, so it must not be able to
+  # outlive this script - not on an error path, not on an early return. The first
+  # version relied on a trailing `rm`, and a non-matching grep under
+  # `set -euo pipefail` aborted the hook before reaching it, leaving the admin
+  # token on disk. A trap is the only reliable cleanup here.
+  trap 'rm -f "$HDR_FILE"' EXIT
   BU_URL="${MCPJUNGLE_BROWSER_USE_URL:-http://solanki-lab-browser-use_browser-use_1:8766/mcp}"
   BU_NAME="browser-use"
 
@@ -165,13 +171,13 @@ if [ -s "$ADMIN_FILE" ]; then
   # PUT /api/v0/clients/{name} {name, allow_list, ...} -> 200
   if [ "$registered" -eq 1 ] && [ -s "$CLIENT_FILE" ]; then
     raw=$(get_authed "${BASE}/api/v0/clients" "@${HDR_FILE}")
-    if printf '%s' "$raw" | grep -q "\"${BU_NAME}\""; then
+    if printf '%s' "$raw" | grep -q "\"${BU_NAME}\"" || true; then
       : # already allowed, nothing to do
     else
       # Preserve whatever the operator allowed by hand: read the current list and
       # add ours rather than overwriting with a hardcoded one.
-      current=$(printf '%s' "$raw" | tr '}' '\n' | grep "\"name\":\"${CLIENT_NAME}\"" | head -n1)
-      existing=$(printf '%s' "$current" | grep -o '"allow_list":\[[^]]*\]' | head -n1 | sed 's/.*\[//;s/\]//')
+      current=$(printf '%s' "$raw" | tr '}' '\n' | grep "\"name\":\"${CLIENT_NAME}\"" | head -n1 || true)
+      existing=$(printf '%s' "$current" | grep -o '"allow_list":\[[^]]*\]' | head -n1 | sed 's/.*\[//;s/\]//' || true)
       merged="\"${BU_NAME}\""
       if [ -n "${existing// /}" ]; then
         merged="\"${BU_NAME}\",${existing}"
@@ -187,5 +193,4 @@ if [ -s "$ADMIN_FILE" ]; then
     fi
   fi
 
-  rm -f "$HDR_FILE"
 fi
