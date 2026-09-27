@@ -1,0 +1,29 @@
+version: "3.7"
+
+services:
+  app_proxy:
+    environment:
+      APP_HOST: solanki-lab-obot_obot_1
+      APP_PORT: 8080
+      # Off for now. Obot will do its own authentication once it is wired; leaving
+      # proxy auth on during the probe would only add a login redirect between us
+      # and the answer we are trying to get.
+      PROXY_AUTH_ADD: "false"
+
+  obot:
+    image: ghcr.io/obot-platform/obot:v0.26.1@sha256:d1ec437faaec9a0d399e5b07e028035c45d480e01186ea323fd1cc71110f24f1
+    restart: on-failure
+    # No /var/run/docker.sock. Obot's docs scope the socket to development and
+    # evaluation, and umbrel's packaging contract forbids mounting it outright.
+    # Losing MCP Hosting is the accepted cost; Gateway and Registry still work.
+    environment:
+      # Embedded PostgreSQL, which the image ships. Upstream marks this dev-only
+      # too, but it is the right shape for a single-container umbrel app and the
+      # alternative is a second database service.
+      OBOT_SERVER_DEV_USEEMBEDDEDDB: "true"
+      # Keep Obot from calling Obot's hosted model proxy when no provider is set.
+      OBOT_SERVER_MODEL_PROXY_URL: ""
+      # Auth is wired in the next iteration, once the socketless boot is proven.
+      OBOT_SERVER_ENABLE_AUTHENTICATION: "false"
+    volumes:
+      - ${APP_DATA_DIR}/data:/home/postgres

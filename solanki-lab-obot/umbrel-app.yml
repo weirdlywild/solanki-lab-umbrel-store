@@ -1,0 +1,41 @@
+manifestVersion: 1.1
+id: solanki-lab-obot
+category: developer
+name: Obot
+version: "0.26.1-probe.1"
+tagline: Self-hosted MCP gateway, registry and control plane with a web UI and real authentication
+description: >-
+  Obot is an open-source platform for MCP: a gateway that fronts many MCP
+  servers behind one endpoint, a registry/catalog for discovering and approving
+  them, per-tool access policies, and a full audit trail of every call.
+
+  Start at `http://<your-umbrel>:8090/` to sign in and configure it from the
+  browser.
+
+
+  ⚠️ This package deliberately does **not** mount the host Docker socket, which
+  Obot's own documentation says to use only for development and evaluation.
+  That means the MCP Hosting feature is unavailable here, so Obot cannot launch
+  MCP servers as sibling containers. Gateway and Registry are unaffected: point
+  Obot at MCP servers that already run, including other apps on this Umbrel.
+
+
+  This is an early probe build. It exists to answer one question before the
+  package is finished: whether Obot starts at all without the Docker socket.
+website: https://obot.ai
+dependencies: []
+repo: https://github.com/obot-platform/obot
+support: https://github.com/obot-platform/obot/issues
+port: 8090
+gallery: []
+path: ""
+defaultUsername: ""
+defaultPassword: ""
+icon: https://cdn.jsdelivr.net/gh/weirdlywild/solanki-lab-umbrel-store@main/solanki-lab-obot/icon.svg
+releaseNotes: >-
+  - Probe build: verifies whether Obot starts without the host Docker socket, which upstream documents as development-only and which umbrel's packaging contract forbids
+  - MCP Hosting is therefore unavailable; Gateway and Registry work against MCP servers that already run
+  - Authentication is not yet wired. OBOT_SERVER_LOCAL_AUTH_INITIAL_OWNER_EMAIL and a derived setup token are added once the boot behaviour is confirmed
+developer: Obot AI
+submitter: Solanki Lab
+submission: https://github.com/weirdlywild/solanki-lab-umbrel-store
