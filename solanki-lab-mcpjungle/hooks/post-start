@@ -74,43 +74,56 @@ json_field() {
   printf '%s' "$1" | tr ',' '\n' | grep "\"$2\"" | head -n1 | cut -d'"' -f4
 }
 
+# POST and split the response into body and status, so a failure can report what
+# the server actually said. curl -f would discard both, which makes a rejected
+# payload indistinguishable from a network error. The body is only ever logged on
+# failure, and a failed /init carries no token.
+post() {
+  curl -sS -X POST "$1" -H 'content-type: application/json' "${@:3}" \
+    -d "$2" -w $'\n%{http_code}' 2>/dev/null || true
+}
+
 # Both steps are guarded by their output file, so this is safe to run on every
 # start: it does the work once and then never touches the server again.
 if [ ! -s "$ADMIN_FILE" ]; then
-  if response=$(curl -fsS -X POST "${BASE}/init" \
-        -H 'content-type: application/json' \
-        -d '{"mode":"prod"}' 2>/dev/null); then
-    admin_token=$(json_field "$response" admin_access_token || true)
+  # "enterprise" is the canonical mode. The value "production" is a deprecated
+  # alias for the same thing and is still accepted; anything else is rejected
+  # with "invalid server mode".
+  raw=$(post "${BASE}/init" '{"mode":"enterprise"}')
+  status=$(printf '%s' "$raw" | tail -n1)
+  body=$(printf '%s' "$raw" | sed '$d')
+  if [ "$status" = "200" ]; then
+    admin_token=$(json_field "$body" admin_access_token || true)
     if [ -n "$admin_token" ]; then
       printf '%s' "$admin_token" > "$ADMIN_FILE"
       chmod 600 "$ADMIN_FILE"
       log "initialised in enterprise mode; admin token written to ${ADMIN_FILE}"
     else
-      log "POST /init succeeded but no admin_access_token in the response"
+      log "POST /init returned 200 but no admin_access_token in the body"
     fi
   else
-    log "POST /init failed; initialise manually with: mcpjungle init-server"
+    log "POST /init returned HTTP ${status:-none}: $(printf '%s' "$body" | head -c 200)"
   fi
 fi
 
 if [ ! -s "$CLIENT_FILE" ] && [ -s "$ADMIN_FILE" ]; then
   printf 'Authorization: Bearer %s\n' "$(cat "$ADMIN_FILE")" > "$HDR_FILE"
-  body="{\"name\":\"${CLIENT_NAME}\",\"description\":\"Pre-created by the umbrel post-start hook\",\"is_custom_access_token\":false,\"allow_list\":[]}"
-  if response=$(curl -fsS -X POST "${BASE}/api/v0/clients" \
-        -H 'content-type: application/json' \
-        -H "@${HDR_FILE}" \
-        -d "$body" 2>/dev/null); then
-    client_token=$(json_field "$response" access_token || true)
+  payload="{\"name\":\"${CLIENT_NAME}\",\"description\":\"Pre-created by the umbrel post-start hook\",\"is_custom_access_token\":false,\"allow_list\":[]}"
+  raw=$(post "${BASE}/api/v0/clients" "$payload" -H "@${HDR_FILE}")
+  status=$(printf '%s' "$raw" | tail -n1)
+  body=$(printf '%s' "$raw" | sed '$d')
+  if [ "$status" = "201" ] || [ "$status" = "200" ]; then
+    client_token=$(json_field "$body" access_token || true)
     if [ -n "$client_token" ]; then
       printf '%s' "$client_token" > "$CLIENT_FILE"
       chmod 600 "$CLIENT_FILE"
       log "created MCP client '${CLIENT_NAME}' with an empty allow list; its token is in ${CLIENT_FILE}"
       log "no servers are allowed yet - add one and tick it for '${CLIENT_NAME}' in the dashboard at ${BASE}/"
     else
-      log "POST /api/v0/clients succeeded but no access_token in the response"
+      log "client creation returned ${status} but no access_token in the body"
     fi
   else
-    log "could not pre-create an MCP client; create one in the dashboard"
+    log "POST /api/v0/clients returned HTTP ${status:-none}: $(printf '%s' "$body" | head -c 200)"
   fi
   rm -f "$HDR_FILE"
 fi

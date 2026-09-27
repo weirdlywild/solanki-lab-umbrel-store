@@ -2,7 +2,7 @@ manifestVersion: 1.1
 id: solanki-lab-mcpjungle
 category: developer
 name: MCPJungle
-version: "0.4.6-patch.3"
+version: "0.4.6-patch.4"
 tagline: Self-hosted MCP gateway with a dashboard, client tokens, and deny-by-default access control
 description: >-
   MCPJungle is a single registry and gateway for all your MCP servers. Register
@@ -44,6 +44,8 @@ description: >-
   are the authentication layer for both the `/mcp` endpoint and the dashboard.
   Keep port 8080 on your LAN or Tailscale and do not expose it to the internet.
 releaseNotes: >-
+  - Fix the self-initialising hook: it posted {"mode":"prod"}, but the server's mode constants are "development", "enterprise" and the deprecated alias "production". "prod" was rejected, so the hook logged a failure and the app stayed uninitialised. Now sends "enterprise"
+  - Hook failures now log the HTTP status and a truncated response body instead of discarding them. curl -f made a rejected payload indistinguishable from a network error, which is what made this hard to diagnose
   - Self-initialising install: a post-start hook performs the enterprise-mode bootstrap over the HTTP API (POST /init, then POST /api/v0/clients) and writes both tokens under the app data directory with mode 600. Previously the app was unusable until someone ran `mcpjungle init-server` by hand, which needed root on the device
   - Fix Umbrel app-proxy auth: the manifest appProxyAuth block was inert and every request was redirected to the Umbrel login. Replaced with PROXY_AUTH_ADD "false" on the app_proxy service, which is the documented mechanism and survives a fresh install
   - Remove the non-functional manifest appProxyAuth block rather than leave a setting that claims to disable auth but does not
