@@ -2,8 +2,8 @@ manifestVersion: 1.1
 id: solanki-lab-mcpjungle
 category: developer
 name: MCPJungle
-version: "0.4.6-patch.8"
-tagline: Self-hosted MCP gateway with a web dashboard for registering and managing your MCP servers
+version: "0.4.6-patch.9"
+tagline: Self-hosted MCP gateway with per-client access tokens and deny-by-default access control
 description: >-
   MCPJungle is a single registry and gateway for all your MCP servers. Register
   each server once, then point every AI client at one endpoint and let agents
@@ -11,30 +11,32 @@ description: >-
   tool from a server called `github` is exposed as `github/git_commit`.
 
 
-  🖥️ **Runs in development mode**, which is what makes the dashboard available:
-  MCPJungle only serves its web UI in development mode, and a package that opens
-  to a 404 does not meet umbrel's requirement for a usable web UI. Open it at
-  `http://<your-umbrel>:8080/` to register MCP servers, inspect their tools, and
-  manage clients.
+  🔐 **Runs in enterprise mode.** Every route is authenticated: `/mcp` requires
+  an MCP client token, `/api/v0` requires the admin token, and access is
+  deny-by-default, so a client cannot reach any registered server until it is
+  explicitly allowed. Anyone who can reach port 8080 without a token gets
+  nothing.
 
 
-  ⚠️ **Development mode means MCPJungle enforces no authentication of its own.**
-  There are no client tokens and no allow lists. Anyone who can reach port 8080
-  can use every registered MCP server - including Browser Use, which drives a
-  real browser with your network access. Do not expose this port to the internet,
-  and prefer Tailscale over plain LAN access.
+  🔧 No manual setup and no root shell. A post-start hook performs the whole
+  first-run over the HTTP API - `POST /init` for the admin token, then it
+  registers the Browser Use upstream and creates an MCP client called `default`
+  with that upstream allowed. Tokens are written to this app's data directory
+  with mode 600 and are never printed to the log:
+
+  - `data/admin-access-token` - gateway admin
+  - `data/client-access-token` - **this is the one your MCP client sends**, as
+    `Authorization: Bearer <token>` to `http://<your-umbrel>:8080/mcp`
+
+  The hook reconciles on every start: if an upstream is missing from the
+  client's allow list it is added, and entries you allowed by hand are kept.
 
 
-  🔒 What is still protected: Umbrel's app-proxy authentication is left **on**,
-  and only `/mcp` is whitelisted, because MCP clients cannot send Umbrel cookies.
-  So the dashboard and the `/api/v0` management API both require an Umbrel login.
-  The open surface is the `/mcp` protocol endpoint alone.
-
-
-  🔧 First run: sign in with your Umbrel account and add your MCP servers from the
-  dashboard. Upstreams that are already HTTP-reachable on the umbrel network can
-  be pointed at directly, for example Browser Use at
-  `http://solanki-lab-browser-use_browser-use_1:8766/mcp`.
+  ⚠️ **There is no web dashboard in this mode.** MCPJungle serves its UI only in
+  development mode, which is the mode this app exists to avoid, so `/` returns
+  404 by design. Management is the REST API under `/api/v0` plus the `mcpjungle`
+  CLI. `GET /health` and `GET /metadata` are the only unauthenticated endpoints
+  and neither reveals anything sensitive.
 
 
   ⚠️ Keep port 8080 on your LAN or Tailscale and do not expose it to the

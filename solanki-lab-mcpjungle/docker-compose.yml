@@ -5,24 +5,24 @@ services:
     environment:
       APP_HOST: solanki-lab-mcpjungle_mcpjungle_1
       APP_PORT: 8080
-      # Umbrel app-proxy auth is left ON, and only /mcp is whitelisted.
+      # Umbrel app-proxy auth is off, and in enterprise mode that is safe.
       #
-      # This app runs in development mode, which means MCPJungle enforces no
-      # authentication of its own: no client tokens, no allow lists, and anyone
-      # who can reach this port can drive the registered MCP servers - including
-      # a real browser on the LAN. That is the accepted trade for the dashboard
-      # UI, which MCPJungle only serves in development mode.
+      # In development mode this had to be on with /mcp whitelisted, because
+      # MCPJungle enforced nothing of its own. In enterprise mode MCPJungle
+      # authenticates every route itself: /mcp needs an MCP client token and
+      # /api/v0 needs the admin token. There is no unauthenticated surface here
+      # except /health and /metadata, which leak nothing.
       #
-      # The umbrel packaging contract's pattern for protocol endpoints that
-      # cannot send umbrel cookies is exactly this: keep proxy auth on and
-      # whitelist only the route the protocol needs. So the dashboard and
-      # /api/v0 require an umbrel login, and only /mcp is open.
+      # It also has to be off for the post-start hook to work: the hook
+      # registers the Browser Use upstream through /api/v0/servers, and with
+      # umbrel auth on that path would require a browser session the hook does
+      # not have. A management API open to the LAN was the alternative and is
+      # not worth it.
       #
-      # A manifest `appProxyAuth: {enabled: ...}` block was tried first and had no
-      # effect on this umbrelOS build - the setting had to be made here. Do not
-      # trust that manifest block.
-      PROXY_AUTH_ADD: "true"
-      PROXY_AUTH_WHITELIST: "/mcp"
+      # A manifest `appProxyAuth: {enabled: ...}` block was tried and proved
+      # inert on this umbrelOS build. The setting that actually works is the
+      # umbrel app setting, not the manifest.
+      PROXY_AUTH_ADD: "false"
 
   mcpjungle:
     image: ghcr.io/mcpjungle/mcpjungle:0.4.6@sha256:59940d2e3a586ab9a063cf24fa37460bc993686fa056729fd1ada25436123dd9
@@ -41,13 +41,15 @@ services:
     # exec-form probe would fail. Verify liveness with:
     #   curl http://<umbrel-host>:8080/health
     environment:
-      # Development mode is a fixed literal and deliberately not exposed as an
-      # environment variable. It is what makes the dashboard available, and the
-      # App Store gate requires a usable web UI. It also means the gateway has no
-      # authentication of its own, so the compensating control is app_proxy auth
-      # plus a /mcp whitelist above. Flipping this to "enterprise" would remove
-      # the dashboard and break the UI gate, so it is not a runtime toggle.
-      SERVER_MODE: "development"
+      # Enterprise mode is the whole security model: per-client access tokens on
+      # /mcp, admin tokens on /api/v0, and deny-by-default so a client cannot
+      # reach a server until it is explicitly allowed. It is a fixed literal and
+      # not an exposed environment variable, because switching to "development"
+      # silently removes all authentication with no other visible change.
+      #
+      # The cost is that MCPJungle serves no dashboard in this mode. See the
+      # manifest description for how first-run is handled without one.
+      SERVER_MODE: "enterprise"
       # OpenTelemetry is off by default and must stay off unless USER is set.
       # When enabled, the Go OTel SDK builds a default resource that calls
       # user.Current(). In this distroless, cgo-free build that call needs
