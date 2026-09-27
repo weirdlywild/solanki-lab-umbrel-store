@@ -108,7 +108,31 @@ fi
 
 if [ ! -s "$CLIENT_FILE" ] && [ -s "$ADMIN_FILE" ]; then
   printf 'Authorization: Bearer %s\n' "$(cat "$ADMIN_FILE")" > "$HDR_FILE"
-  payload="{\"name\":\"${CLIENT_NAME}\",\"description\":\"Pre-created by the umbrel post-start hook\",\"is_custom_access_token\":false,\"allow_list\":[]}"
+
+  # Register the Browser Use upstream. This is the one coupling between the two
+  # apps in this store, and it is deliberate: a gateway whose client cannot reach
+  # anything is not finished. Registration is best-effort - if Browser Use is not
+  # installed the client is still created, just with nothing allowed.
+  #
+  # The container DNS name is used rather than the host IP so traffic stays on
+  # the shared umbrel network instead of hairpinning through the host.
+  BU_URL="${MCPJUNGLE_BROWSER_USE_URL:-http://solanki-lab-browser-use_browser-use_1:8766/mcp}"
+  BU_NAME="browser-use"
+  reg_payload="{\"name\":\"${BU_NAME}\",\"transport\":\"streamable_http\",\"description\":\"Browser automation\",\"url\":\"${BU_URL}\"}"
+
+  raw=$(post "${BASE}/api/v0/servers" "$reg_payload" -H "@${HDR_FILE}")
+  status=$(printf '%s' "$raw" | tail -n1)
+  body=$(printf '%s' "$raw" | sed '$d')
+  allow_list="[]"
+  if [ "$status" = "201" ] || [ "$status" = "202" ] || [ "$status" = "409" ]; then
+    allow_list="[\"${BU_NAME}\"]"
+    log "upstream '${BU_NAME}' registered (HTTP ${status})"
+  else
+    log "could not register '${BU_NAME}' (HTTP ${status:-none}): $(printf '%s' "$body" | head -c 200)"
+    log "create it later with: mcpjungle register --name ${BU_NAME} --url ${BU_URL}"
+  fi
+
+  payload="{\"name\":\"${CLIENT_NAME}\",\"description\":\"Pre-created by the umbrel post-start hook\",\"is_custom_access_token\":false,\"allow_list\":${allow_list}}"
   raw=$(post "${BASE}/api/v0/clients" "$payload" -H "@${HDR_FILE}")
   status=$(printf '%s' "$raw" | tail -n1)
   body=$(printf '%s' "$raw" | sed '$d')
@@ -117,8 +141,8 @@ if [ ! -s "$CLIENT_FILE" ] && [ -s "$ADMIN_FILE" ]; then
     if [ -n "$client_token" ]; then
       printf '%s' "$client_token" > "$CLIENT_FILE"
       chmod 600 "$CLIENT_FILE"
-      log "created MCP client '${CLIENT_NAME}' with an empty allow list; its token is in ${CLIENT_FILE}"
-      log "no servers are allowed yet - add one and tick it for '${CLIENT_NAME}' in the dashboard at ${BASE}/"
+      log "created MCP client '${CLIENT_NAME}' with allow_list ${allow_list}"
+      log "send that token as 'Authorization: Bearer <token>' to ${BASE}/mcp"
     else
       log "client creation returned ${status} but no access_token in the body"
     fi

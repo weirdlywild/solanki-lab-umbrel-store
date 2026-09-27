@@ -2,7 +2,7 @@ manifestVersion: 1.1
 id: solanki-lab-mcpjungle
 category: developer
 name: MCPJungle
-version: "0.4.6-patch.4"
+version: "0.4.6-patch.5"
 tagline: Self-hosted MCP gateway with a dashboard, client tokens, and deny-by-default access control
 description: >-
   MCPJungle is a single registry and gateway for all your MCP servers. Register
@@ -34,9 +34,17 @@ description: >-
   - `data/client-access-token` - send this one as `Authorization: Bearer` to
     the `/mcp` endpoint
 
-  The pre-created client starts with an **empty allow list**, which is the
-  deny-by-default posture. Register a server and tick it for `default` in the
-  dashboard at `http://<your-umbrel>:8080/` before it can call any tools.
+  The hook also registers the Browser Use upstream over the shared umbrel
+  network and allows it for that client, so a fresh install is usable with no
+  further steps. If Browser Use is not installed the client is still created,
+  with an empty allow list and nothing reachable.
+
+
+  ⚠️ **There is no web dashboard in this mode.** MCPJungle only serves its
+  dashboard UI in development mode, which is exactly the mode this app exists to
+  avoid, so `/` returns 404 by design. Management is the REST API under
+  `/api/v0` plus the `mcpjungle` CLI. `GET /health` and `GET /metadata` are the
+  only unauthenticated endpoints.
 
 
   ⚠️ MCP clients cannot complete an Umbrel login, so this app's Umbrel app-proxy
@@ -44,6 +52,8 @@ description: >-
   are the authentication layer for both the `/mcp` endpoint and the dashboard.
   Keep port 8080 on your LAN or Tailscale and do not expose it to the internet.
 releaseNotes: >-
+  - Hook now also registers the Browser Use upstream and allows it for the pre-created client, so a fresh install is usable with no manual steps
+  - Correct the dashboard claim. MCPJungle only serves its dashboard in development mode, so there is no dashboard in enterprise mode and / returns 404 by design. The earlier description pointed at a URL that cannot exist
   - Fix the self-initialising hook: it posted {"mode":"prod"}, but the server's mode constants are "development", "enterprise" and the deprecated alias "production". "prod" was rejected, so the hook logged a failure and the app stayed uninitialised. Now sends "enterprise"
   - Hook failures now log the HTTP status and a truncated response body instead of discarding them. curl -f made a rejected payload indistinguishable from a network error, which is what made this hard to diagnose
   - Self-initialising install: a post-start hook performs the enterprise-mode bootstrap over the HTTP API (POST /init, then POST /api/v0/clients) and writes both tokens under the app data directory with mode 600. Previously the app was unusable until someone ran `mcpjungle init-server` by hand, which needed root on the device
