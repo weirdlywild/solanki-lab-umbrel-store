@@ -2,7 +2,7 @@ manifestVersion: 1.1
 id: solanki-lab-bifrost
 category: developer
 name: Bifrost
-version: "2.2.3-probe.2"
+version: "2.2.3-probe.3"
 tagline: "Maxim AI's Apache-2.0 gateway: a web dashboard plus a token-authenticated MCP endpoint"
 description: >-
   Bifrost is an open-source AI gateway that also works as an MCP gateway. It
