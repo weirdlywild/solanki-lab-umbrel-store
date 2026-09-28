@@ -2,7 +2,7 @@ manifestVersion: 1.1
 id: solanki-lab-contextforge
 category: developer
 name: ContextForge
-version: "1.0.0"
+version: "1.0.1"
 tagline: IBM's open-source MCP gateway, registry and admin UI with real token authentication
 description: >-
   ContextForge is an Apache-2.0 MCP gateway, registry and proxy from IBM. It
@@ -34,12 +34,14 @@ description: >-
   apps.
 
 
-  Note on API paths: the current API is under `/v1` and the admin UI under
-  `/admin`; both require a signed-in session. The unversioned paths such as
-  `/servers` and `/tools` return 404 because the legacy API is disabled — those
-  routes are past their sunset date and the gateway warns about them on every
-  start. Each registered MCP server is then reachable at
-  `/servers/<uuid>/mcp`, which requires a JWT bearer token.
+  Note on API paths: the management API is under `/v1` and the admin UI under
+  `/admin`; both require a signed-in session. Each registered MCP server is
+  reachable at `/servers/<uuid>/mcp`, which requires a JWT bearer token.
+
+  The gateway logs a warning on startup that its legacy API sunset date has
+  passed. **Leave `LEGACY_API_ENABLED` on.** Setting it to `false` silences the
+  warning but also removes `/admin/login`, so the app redirects to a page that
+  404s and there is no way to sign in from a browser.
 
 
   ⚠️ No host Docker socket is mounted, and none is needed — ContextForge proxies
@@ -66,6 +68,7 @@ environment:
     default: "admin@solanki.home"
     note: Email address for the first platform administrator. Change it to your own before signing in, then change the password.
 releaseNotes: >-
+  - Fix the admin UI: LEGACY_API_ENABLED=false removed /admin/login, so / redirected to a 404 and the UI could not be signed into at all. It is back on. The startup deprecation warning is cosmetic; the route is not
   - Verified working: the admin UI, the /v1 management API and every per-server MCP endpoint all enforce authentication, and the SQLite database persists across restarts
   - Run as 1000:0. The image defaults to UID 10001 while umbrel creates app data as 1000:1000, so the gateway could not create its database and every worker died during startup without logging an error
   - Absolute sqlite path. SQLAlchemy reads the three-slash form as relative to the process working directory, not the bind mount

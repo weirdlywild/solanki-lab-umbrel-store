@@ -53,10 +53,13 @@ services:
       # The umbrel app is served over plain HTTP on the LAN, so secure cookies
       # would stop the admin UI from authenticating at all.
       SECURE_COOKIES: "false"
-      # Their own startup log warns that the legacy API sunset date has passed and
-      # the routes are overdue for removal. Turning them off removes deprecated
-      # surface rather than leaving it enabled past its own deadline.
-      LEGACY_API_ENABLED: "false"
+      # Left at the default (enabled) on purpose. The gateway logs a warning on
+      # every start that the legacy API sunset date has passed, and setting this
+      # to false silences that warning - but it also removes the admin UI login
+      # page. The app then redirects / -> /admin/ -> /admin/login and that route
+      # 404s, leaving no way to sign in through a browser at all. The warning is
+      # cosmetic; the route is load-bearing.
+      LEGACY_API_ENABLED: "true"
       PLATFORM_ADMIN_EMAIL: "${PLATFORM_ADMIN_EMAIL:-admin@solanki.home}"
       PLATFORM_ADMIN_FULL_NAME: "Platform Administrator"
       # Secrets come from exports.sh, which umbrel sources into the environment
