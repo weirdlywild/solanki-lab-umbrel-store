@@ -1,0 +1,50 @@
+manifestVersion: 1.1
+id: solanki-lab-bifrost
+category: developer
+name: Bifrost
+version: "1.3.9-probe.1"
+tagline: Maxim AI's Apache-2.0 gateway: a web dashboard plus a token-authenticated MCP endpoint
+description: >-
+  Bifrost is an open-source AI gateway that also works as an MCP gateway. It
+  registers MCP servers once and exposes their tools through a single endpoint,
+  with a built-in web dashboard for configuration.
+
+
+  🔐 Unlike most gateways in this space, Bifrost authenticates the client-to-gateway
+  hop. With `enforce_auth_on_inference` enabled, every `/mcp` request must present a
+  Virtual Key as `Authorization: Bearer <key>`, and each key sees only the tools it
+  is allowed. An inactive or expired key is refused with 403. That is
+  deny-by-default, and it is the reason for choosing this over Fiberplane.
+
+
+  🖥️ Open `http://<your-umbrel>:8080/` for the dashboard. The UI and the
+  authenticated `/mcp` endpoint are separate surfaces, so having a dashboard does
+  not require turning authentication off.
+
+
+  Single Go binary in one container. State is two SQLite databases under this app's
+  data directory. No Postgres, Redis or nginx, and no host Docker socket.
+
+
+  ⚠️ This is a probe build, installed to measure its real memory footprint before
+  the package is finalised. Bifrost publishes a 3.3 GB peak figure under load, and
+  the idle figure is what decides whether it is worth keeping on this host.
+website: https://www.getmaxim.ai/mcp-gateway
+dependencies: []
+repo: https://github.com/maximhq/bifrost
+support: https://github.com/maximhq/bifrost/issues
+port: 8080
+gallery: []
+path: "/"
+defaultUsername: ""
+defaultPassword: ""
+icon: https://cdn.jsdelivr.net/gh/weirdlywild/solanki-lab-umbrel-store@main/solanki-lab-bifrost/icon.svg
+releaseNotes: >-
+  - Probe build of Bifrost v1.3.9 (linux/amd64 + linux/arm64), digest-pinned
+  - Single Go binary, one container, SQLite state under the app data directory
+  - No host Docker socket, which was the hard blocker for Obot
+  - The image already runs as UID 1000 via adduser -D, which matches umbrel's app data ownership, so no user override is needed
+  - Authentication of /mcp via Virtual Keys is configured in a follow-up once the boot behaviour and memory footprint are confirmed
+developer: Maxim AI
+submitter: Solanki Lab
+submission: https://github.com/weirdlywild/solanki-lab-umbrel-store

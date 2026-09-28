@@ -1,0 +1,39 @@
+version: "3.7"
+
+services:
+  app_proxy:
+    environment:
+      APP_HOST: solanki-lab-bifrost_bifrost_1
+      APP_PORT: 8080
+      # Off. Bifrost authenticates /mcp itself with Virtual Keys, and its web UI
+      # has its own sign-in. An umbrel login in front of both would add a second
+      # credential to manage without protecting anything the app does not already.
+      # Note: a manifest `appProxyAuth` block is inert on this umbrelOS build, so
+      # the compose service environment is the control that actually takes effect.
+      PROXY_AUTH_ADD: "false"
+
+  bifrost:
+    image: maximhq/bifrost:v1.3.9@sha256:e949a76e6343fcc03defbd756b088bcf1b686d449559b4f2e9408b5e648432a1
+    restart: on-failure
+    # No `user:` override on purpose. The image builds its own account with
+    # `adduser -D -s /bin/sh appuser`, which on Alpine allocates the first free
+    # non-system UID: 1000. That already matches the 1000:1000 that umbrel
+    # creates APP_DATA_DIR as, so the gateway can write its SQLite databases with
+    # no ownership fix. ContextForge needed `user: "1000:0"` because its image
+    # hardcodes USER 10001; Bifrost does not.
+    #
+    # No /var/run/docker.socket. Bifrost is a proxy and does not spawn MCP
+    # servers, so it has no reason to want one. That requirement is what made
+    # Obot impossible to package.
+    environment:
+      APP_HOST: "0.0.0.0"
+      APP_PORT: "8080"
+      LOG_LEVEL: "info"
+      # The image sets LOG_STYLE=json. Human-readable is easier to read in
+      # umbrel's app log view when something goes wrong.
+      LOG_STYLE: "pretty"
+      APP_DIR: "/app/data"
+    volumes:
+      # APP_DIR is /app/data and is a declared VOLUME in the image. It holds
+      # config.db (SQLite, the UI's configuration) and logs.db.
+      - ${APP_DATA_DIR}/data:/app/data
