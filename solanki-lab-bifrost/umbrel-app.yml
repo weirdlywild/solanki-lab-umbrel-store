@@ -2,7 +2,7 @@ manifestVersion: 1.1
 id: solanki-lab-bifrost
 category: developer
 name: Bifrost
-version: "2.2.3-probe.3"
+version: "2.2.3-probe.4"
 tagline: "Maxim AI's Apache-2.0 gateway: a web dashboard plus a token-authenticated MCP endpoint"
 description: >-
   Bifrost is an open-source AI gateway that also works as an MCP gateway. It
@@ -63,10 +63,22 @@ submission: https://github.com/weirdlywild/solanki-lab-umbrel-store
 # values stay out of the config file and out of git entirely.
 environment:
   - name: BIFROST_SETUP_TOKEN
-    description: >-
-      One-time token required to create the first Bifrost admin account. Any
-      long random string. Rotate or discard after the admin exists.
+    services:
+      - bifrost
+    default: ""
+    note: >-
+      Required before the first admin account can be created. Bifrost rejects
+      any attempt to create that account while this is unset. Use a long random
+      string, then discard it.
   - name: BIFROST_ADMIN_USERNAME
-    description: Username for the Bifrost dashboard at port 8080.
+    services:
+      - bifrost
+    default: ""
+    note: Username for the Bifrost dashboard on port 8080.
   - name: BIFROST_ADMIN_PASSWORD
-    description: Password for the Bifrost dashboard. Use a long random string.
+    services:
+      - bifrost
+    default: ""
+    note: >-
+      Password for the Bifrost dashboard. Use a long random string. Set both
+      admin values in umbrel App Settings, never in this repository.
