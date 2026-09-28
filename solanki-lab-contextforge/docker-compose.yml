@@ -24,7 +24,11 @@ services:
       # SQLite only. Their full compose also runs Postgres, Redis, Keycloak and
       # nginx; none of that is needed to serve one user and all of it would be
       # additional containers on a host that already runs 13 apps.
-      DATABASE_URL: "sqlite:///./data/contextforge.db"
+      # Absolute path, four slashes: SQLAlchemy treats sqlite:///x as RELATIVE to
+      # the process working directory, so ./data/ pointed at a directory that does
+      # not exist in the image and never reached the bind mount. The first probe
+      # hung in application startup with no database in the app data directory.
+      DATABASE_URL: "sqlite:////app/data/contextforge.db"
       # Authentication on. This is the whole reason for choosing ContextForge:
       # the client-to-gateway hop requires a JWT bearer token, and each server is
       # exposed at /servers/<uuid>/mcp behind that check.
@@ -34,6 +38,10 @@ services:
       # The umbrel app is served over plain HTTP on the LAN, so secure cookies
       # would stop the admin UI from authenticating at all.
       SECURE_COOKIES: "false"
+      # Their own startup log warns that the legacy API sunset date has passed and
+      # the routes are overdue for removal. Turning them off removes deprecated
+      # surface rather than leaving it enabled past its own deadline.
+      LEGACY_API_ENABLED: "false"
       PLATFORM_ADMIN_EMAIL: "${PLATFORM_ADMIN_EMAIL:-admin@solanki.home}"
       PLATFORM_ADMIN_FULL_NAME: "Platform Administrator"
       # Secrets come from exports.sh, which umbrel sources into the environment
@@ -44,4 +52,3 @@ services:
       PLATFORM_ADMIN_PASSWORD: "${APP_CONTEXTFORGE_ADMIN_PASSWORD}"
     volumes:
       - ${APP_DATA_DIR}/data:/app/data
-      - ${APP_DATA_DIR}/secrets:/run/obot
