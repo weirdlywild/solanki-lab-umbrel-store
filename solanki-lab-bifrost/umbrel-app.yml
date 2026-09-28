@@ -50,3 +50,23 @@ releaseNotes: >-
 developer: Maxim AI
 submitter: Solanki Lab
 submission: https://github.com/weirdlywild/solanki-lab-umbrel-store
+
+# Secrets are deliberately declared with empty defaults. They must be filled in
+# under umbrel App Settings -> Environment, which is umbrel's own masked input,
+# so no secret value ever lands in this repository or in a chat transcript.
+#
+# BIFROST_SETUP_TOKEN is mandatory before the first admin account can be
+# created. Without it Bifrost logs a warning and rejects any attempt to create
+# that account, which is the intended fail-closed behaviour.
+#
+# Bifrost resolves `env.NAME` references from the container environment, so the
+# values stay out of the config file and out of git entirely.
+environment:
+  - name: BIFROST_SETUP_TOKEN
+    description: >-
+      One-time token required to create the first Bifrost admin account. Any
+      long random string. Rotate or discard after the admin exists.
+  - name: BIFROST_ADMIN_USERNAME
+    description: Username for the Bifrost dashboard at port 8080.
+  - name: BIFROST_ADMIN_PASSWORD
+    description: Password for the Bifrost dashboard. Use a long random string.
