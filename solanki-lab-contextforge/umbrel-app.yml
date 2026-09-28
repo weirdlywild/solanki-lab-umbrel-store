@@ -1,0 +1,68 @@
+manifestVersion: 1.1
+id: solanki-lab-contextforge
+category: developer
+name: ContextForge
+version: "1.0.0-probe.1"
+tagline: IBM's open-source MCP gateway, registry and admin UI with real token authentication
+description: >-
+  ContextForge is an Apache-2.0 MCP gateway, registry and proxy from IBM. It
+  fronts any number of MCP servers behind a single endpoint, and — unlike most
+  gateways in this space — it actually authenticates the client-to-gateway hop.
+  Each registered server is exposed at `/servers/<uuid>/mcp` and requires a JWT
+  bearer token, with role-based access control and an audit trail behind it.
+
+
+  🖥️ Sign in at `http://<your-umbrel>:4444/admin` to add servers, mint API
+  tokens, and watch traffic. This is a package that opens to a real UI *and*
+  keeps its endpoint authenticated, which is the combination the other
+  candidates could not give us.
+
+
+  🔑 No secrets in this repository, and no manual secret setup. `JWT_SECRET_KEY`
+  and `AUTH_ENCRYPTION_SECRET` are mandatory — the gateway refuses to start
+  without them — so both are derived from your Umbrel device seed in
+  `exports.sh`. They are stable across restarts and updates, and regenerating
+  them would invalidate every issued token. The derived platform-admin password
+  is copied to this app's data directory at mode 600 by a post-start hook, so
+  you can read it from the Umbrel UI and sign in. Delete that file once you have
+  changed the password.
+
+
+  Runs as a single container with SQLite. ContextForge's own full compose also
+  runs Postgres, Redis, Keycloak and nginx; none of that is needed to serve one
+  user, and all of it would be extra containers on a host that already runs 13
+  apps.
+
+
+  ⚠️ No host Docker socket is mounted, and none is needed — ContextForge proxies
+  and registers MCP servers rather than launching them, so it has no reason to
+  want one.
+
+
+  ⚠️ Keep port 4444 on your LAN or Tailscale. It is served over plain HTTP, so
+  do not expose it to the internet or through a public reverse-proxy hostname.
+website: https://ibm.github.io/mcp-context-forge/
+dependencies: []
+repo: https://github.com/IBM/mcp-context-forge
+support: https://github.com/IBM/mcp-context-forge/issues
+port: 4444
+gallery: []
+path: "/admin"
+defaultUsername: ""
+defaultPassword: ""
+icon: https://cdn.jsdelivr.net/gh/weirdlywild/solanki-lab-umbrel-store@main/solanki-lab-contextforge/icon.svg
+environment:
+  - name: PLATFORM_ADMIN_EMAIL
+    services:
+      - gateway
+    default: "admin@solanki.home"
+    note: Email address for the first platform administrator. Change it to your own before signing in, then change the password.
+releaseNotes: >-
+  - Probe build of IBM ContextForge, the most established open-source MCP gateway that authenticates the client hop and still ships a web UI
+  - Single container with SQLite; no Postgres, Redis, Keycloak or nginx
+  - No host Docker socket, which was the hard blocker for Obot
+  - JWT_SECRET_KEY, AUTH_ENCRYPTION_SECRET and the platform-admin password are derived from the device seed in exports.sh. Nothing secret is committed
+  - Admin UI at /admin; per-server MCP endpoints at /servers/<uuid>/mcp require a JWT bearer token
+developer: IBM
+submitter: Solanki Lab
+submission: https://github.com/weirdlywild/solanki-lab-umbrel-store
