@@ -2,7 +2,7 @@ manifestVersion: 1.1
 id: solanki-lab-contextforge
 category: developer
 name: ContextForge
-version: "1.0.0-probe.2"
+version: "1.0.0-probe.3"
 tagline: IBM's open-source MCP gateway, registry and admin UI with real token authentication
 description: >-
   ContextForge is an Apache-2.0 MCP gateway, registry and proxy from IBM. It
@@ -58,6 +58,7 @@ environment:
     default: "admin@solanki.home"
     note: Email address for the first platform administrator. Change it to your own before signing in, then change the password.
 releaseNotes: >-
+  - Fix the startup failure: the image runs as UID 10001 while umbrel creates app data as 1000:1000, so the gateway could not create its SQLite database and every worker died during application startup without logging an error. The service now runs as 1000:0
   - Fix a startup hang: DATABASE_URL used a relative sqlite path, which SQLAlchemy resolves against the process working directory rather than the bind mount, so the database was never created where it could persist
   - Set LEGACY_API_ENABLED=false, which the gateway itself warns about on startup because those routes are past their sunset date
   - Probe build of IBM ContextForge, the most established open-source MCP gateway that authenticates the client hop and still ships a web UI

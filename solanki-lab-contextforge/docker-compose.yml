@@ -13,6 +13,21 @@ services:
       PROXY_AUTH_ADD: "false"
 
   gateway:
+    # Run as umbrel's app-data owner, not the image default.
+    #
+    # The Containerfile sets USER 10001:10001, but umbrel creates ${APP_DATA_DIR}
+    # owned by 1000:1000. The container therefore could not write its SQLite
+    # database: no .db file ever appeared in the app data directory, workers died
+    # during application startup with no error logged, and nothing ever listened
+    # on 4444. That was the whole failure.
+    #
+    # GID 0 rather than 1000 because the Containerfile also runs
+    # `chgrp 0 /app; chmod 0750 /app` under ENABLE_FIPS. That block is skipped in
+    # the public image, so /app is currently world-readable and 1000:1000 would
+    # be enough. GID 0 keeps the app working either way: if /app is 0755 the
+    # other-bits grant read regardless, and if the FIPS hardening ever applies,
+    # group 0 is exactly the group that gets r-x.
+    user: "1000:0"
     image: ghcr.io/ibm/mcp-context-forge:latest@sha256:5903d660a89f95f70f98c24c0493d1783c0585663c99ba9a8cc9acafa3cb0f65
     restart: on-failure
     # No /var/run/docker.sock anywhere. ContextForge is a proxy and registry, not
