@@ -2,7 +2,7 @@ manifestVersion: 1.1
 id: solanki-lab-contextforge
 category: developer
 name: ContextForge
-version: "1.0.1"
+version: "1.0.2"
 tagline: IBM's open-source MCP gateway, registry and admin UI with real token authentication
 description: >-
   ContextForge is an Apache-2.0 MCP gateway, registry and proxy from IBM. It
@@ -68,6 +68,7 @@ environment:
     default: "admin@solanki.home"
     note: Email address for the first platform administrator. Change it to your own before signing in, then change the password.
 releaseNotes: >-
+  - Enable plugins. The admin UI reported "Plugins are currently disabled"; PLUGINS_ENABLED is off upstream by default. This turns on the 40+ bundled plugins, including the PII detection, content filtering and rate limiting hooks
   - Fix the admin UI: LEGACY_API_ENABLED=false removed /admin/login, so / redirected to a 404 and the UI could not be signed into at all. It is back on. The startup deprecation warning is cosmetic; the route is not
   - Verified working: the admin UI, the /v1 management API and every per-server MCP endpoint all enforce authentication, and the SQLite database persists across restarts
   - Run as 1000:0. The image defaults to UID 10001 while umbrel creates app data as 1000:1000, so the gateway could not create its database and every worker died during startup without logging an error

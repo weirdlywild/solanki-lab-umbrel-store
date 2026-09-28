@@ -49,6 +49,11 @@ services:
       # exposed at /servers/<uuid>/mcp behind that check.
       AUTH_REQUIRED: "true"
       MCPGATEWAY_UI_ENABLED: "true"
+      # The admin UI shows "Plugins are currently disabled" without this.
+      # ContextForge ships 40+ plugins, including the PII detection, content
+      # filtering and rate limiting hooks that are the reason to run a gateway
+      # rather than a plain proxy. Off by default upstream.
+      PLUGINS_ENABLED: "true"
       MCPGATEWAY_ADMIN_API_ENABLED: "true"
       # The umbrel app is served over plain HTTP on the LAN, so secure cookies
       # would stop the admin UI from authenticating at all.
