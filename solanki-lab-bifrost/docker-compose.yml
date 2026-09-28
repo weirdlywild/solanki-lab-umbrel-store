@@ -13,14 +13,14 @@ services:
       PROXY_AUTH_ADD: "false"
 
   bifrost:
-    image: maximhq/bifrost:v1.3.9@sha256:e949a76e6343fcc03defbd756b088bcf1b686d449559b4f2e9408b5e648432a1
+    image: maximhq/bifrost:v2.2.3@sha256:975487b95c6399de26e3a108164f21ae52687b316580a13ff0c239b865649ed2
     restart: on-failure
-    # No `user:` override on purpose. The image builds its own account with
-    # `adduser -D -s /bin/sh appuser`, which on Alpine allocates the first free
-    # non-system UID: 1000. That already matches the 1000:1000 that umbrel
-    # creates APP_DATA_DIR as, so the gateway can write its SQLite databases with
-    # no ownership fix. ContextForge needed `user: "1000:0"` because its image
-    # hardcodes USER 10001; Bifrost does not.
+    # No `user:` override on purpose. Since v2.2.3 the image sets `USER 1000:0`
+    # explicitly, which is exactly the 1000:1000 that umbrel creates
+    # APP_DATA_DIR as, so the gateway writes its SQLite databases with no
+    # ownership fix. (The older v1.3.9 image used the named user `appuser`,
+    # which Alpine resolves to UID 1000 anyway. ContextForge needed
+    # `user: "1000:0"` because its image hardcodes USER 10001.)
     #
     # No /var/run/docker.socket. Bifrost is a proxy and does not spawn MCP
     # servers, so it has no reason to want one. That requirement is what made
@@ -33,6 +33,11 @@ services:
       # umbrel's app log view when something goes wrong.
       LOG_STYLE: "pretty"
       APP_DIR: "/app/data"
+      # v2.2.3 exposes the Go runtime's memory controls. Left unset so the Go
+      # runtime self-tunes; measured idle at 71 MB on v1.3.9. Set GOMEMLIMIT to
+      # a byte value (for example 512MiB) to put a hard ceiling on the heap if
+      # the footprint ever needs bounding.
+      GOMEMLIMIT: ""
     volumes:
       # APP_DIR is /app/data and is a declared VOLUME in the image. It holds
       # config.db (SQLite, the UI's configuration) and logs.db.

@@ -2,7 +2,7 @@ manifestVersion: 1.1
 id: solanki-lab-bifrost
 category: developer
 name: Bifrost
-version: "1.3.9-probe.1"
+version: "2.2.3-probe.2"
 tagline: "Maxim AI's Apache-2.0 gateway: a web dashboard plus a token-authenticated MCP endpoint"
 description: >-
   Bifrost is an open-source AI gateway that also works as an MCP gateway. It
@@ -40,7 +40,9 @@ defaultUsername: ""
 defaultPassword: ""
 icon: https://cdn.jsdelivr.net/gh/weirdlywild/solanki-lab-umbrel-store@main/solanki-lab-bifrost/icon.svg
 releaseNotes: >-
-  - Probe build of Bifrost v1.3.9 (linux/amd64 + linux/arm64), digest-pinned
+  - Now tracks the current release line, v2.2.3 (linux/amd64 + linux/arm64), digest-pinned
+  - The previous probe build was pinned to v1.3.9, which turns out to be a stale bundle: it ships Bifrost's MCP *client* side, so upstream servers register and their tools are discovered, but it has no client-facing /mcp route at all and answers POST /mcp with 405. The current v2.2.3 transport is what serves /mcp.
+  - v2.2.3 sets USER 1000:0 explicitly instead of relying on the named appuser, so the UID reasoning is now a documented fact rather than an inference
   - Single Go binary, one container, SQLite state under the app data directory
   - No host Docker socket, which was the hard blocker for Obot
   - The image already runs as UID 1000 via adduser -D, which matches umbrel's app data ownership, so no user override is needed
